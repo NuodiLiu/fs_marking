@@ -1,0 +1,12 @@
+logs/
+.DS_Store
+__pycache__/
+.vscode/
+data/
+*.doc
+*.docx
+*.xlsx
+*.pyc
+*.pyo
+*.pyd
+*.log
