@@ -9,6 +9,7 @@ class StrictHeadingRuleBase(BaseRule):
         self.style_name = style_name.lower()
 
     def run(self, doc):
+        self.logger.debug("Starting StrictHeadingRuleBase.run")
         try:
             heading_paragraphs = []
             unmatched_headings = self.expected_headings.copy()
@@ -20,7 +21,10 @@ class StrictHeadingRuleBase(BaseRule):
 
                 if not text:
                     continue
-
+                
+                if not style:
+                    continue
+                
                 style_actual = style if isinstance(style, str) else style.NameLocal
                 if style_actual.lower() == self.style_name:
                     heading_paragraphs.append(text)
@@ -44,14 +48,17 @@ class StrictHeadingRuleBase(BaseRule):
             if unexpected_headings:
                 errors.append(f"Found unexpected {self.style_name.title()}: {unexpected_headings}")
 
-            return {
+            result = {
                 "name": self.name,
                 "mark": 0 if errors else self.mark,
                 "errors": errors,
                 "needs_review": False
             }
+            self.logger.debug(f"StrictHeadingRuleBase.run result: {result}")
+            return result
 
         except Exception as e:
+            self.logger.exception("Exception in StrictHeadingRuleBase.run")
             return {
                 "name": self.name,
                 "mark": 0,

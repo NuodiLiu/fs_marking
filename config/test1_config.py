@@ -19,9 +19,9 @@ class Test1Config:
             # CoverPageTitleRule(), # problem - find center
             # CoverPageTableRule(),
             # TableOfContentsRule(),
-            StrictHeading1Rule(),
+            # StrictHeading1Rule(),
             # StrictHeading2Rule(),
-            # CombinedStyleRule(),
+            CombinedStyleRule(),
             # ImageRightOfTextRule(),
             # FootnoteOnHabitatRule(),
             # FooterRule(),

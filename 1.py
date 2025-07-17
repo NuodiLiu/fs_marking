@@ -1,6 +1,7 @@
 import colorsys
 import math
 
+# 可选依赖
 try:
     from colormath.color_objects import sRGBColor, LabColor, LCHabColor
     from colormath.color_conversions import convert_color
@@ -8,6 +9,7 @@ try:
 except ImportError:
     _HAS_COLORMATH = False
 
+# 如果要用 Oklab，需要安装 colour-science 库
 try:
     from colour import XYZ_to_OKLab, sRGB_to_XYZ
     _HAS_OKLAB = True
@@ -61,29 +63,8 @@ def is_blue_oklab(rn, gn, bn) -> bool:
     # oklab = [L, a, b], b 负代表偏蓝
     return oklab[2] < -0.02
 
-BLUE = {
-    0x1F497D,  # dk2
-    0x4F81BD,  # accent1
-    0x4BACC6,  # accent5
-    0x0000FF,  # hyperlink
-    0x0000FF,  # Blue
-    0x000080,  # Dark Blue
-    0x00008B,  # DarkBlue (CSS)
-    0x0000CD,  # MediumBlue
-    0x00BFFF,  # DeepSkyBlue
-    0x1E90FF,  # DodgerBlue
-    0x00CED1,  # DarkTurquoise
-    0x00FFFF,  # Aqua / Cyan
-}
 
 def is_blueish(val: int) -> bool:
-    r, g, b = int_to_rgb(val)
-    block = f"\x1b[48;2;{r};{g};{b}m  \x1b[0m"
-    # 打印 decimal、hex，以及 blue-ish 判断
-    print(f"{block}  dec={val:<6d}  hex=0x{val:06X}")
-    if val in BLUE:
-        return True
-    
     r, g, b = int_to_rgb(val)
     rn, gn, bn = r/255., g/255., b/255.
 
@@ -103,6 +84,44 @@ def is_blueish(val: int) -> bool:
     threshold = math.ceil(len(available) / 2)
 
     # 调试时可以打印每个空间的投票结果：
-    print({k:v for k,v in checks.items() if isinstance(v,bool)}, "→ votes:", vote_count, "/", len(available))
+    # print({k:v for k,v in checks.items() if isinstance(v,bool)}, "→ votes:", vote_count, "/", len(available))
 
     return vote_count >= threshold
+
+
+def print_color_blocks(color_values: list[int]) -> None:
+    for val in color_values:
+        r, g, b = int_to_rgb(val)
+        block = f"\x1b[48;2;{r};{g};{b}m  \x1b[0m"
+        result = get_basic_color_category(val)
+        print(f"{block}  0x{val:06X}  →  is_blueish: {result}")
+
+
+if __name__ == "__main__":
+    SAMPLE_COLORS = [
+        0x000080,  # Navy
+        0x00008B,  # DarkBlue
+        0x0000CD,  # MediumBlue
+        0x0000FF,  # Blue
+        0x00BFFF,  # DeepSkyBlue
+        0x1E90FF,  # DodgerBlue
+        0x00CED1,  # DarkTurquoise
+        0x00FFFF,  # Aqua / Cyan
+        0x40E0D0,  # Turquoise
+        0x48D1CC,  # MediumTurquoise
+        0x20B2AA,  # LightSeaGreen
+        0x7FFFD4,  # Aquamarine
+        0x5F9EA0,  # CadetBlue
+        0x4682B4,  # SteelBlue
+        0x6495ED,  # CornflowerBlue
+        0x87CEFA,  # LightSkyBlue
+        0x87CEEB,  # SkyBlue
+        0xB0E0E6,  # PowderBlue
+        0xADD8E6,  # LightBlue
+        0xAFEEEE,  # PaleTurquoise
+        0x6A5ACD,  # SlateBlue
+        0x7B68EE,  # MediumSlateBlue
+        0x483D8B,  # DarkSlateBlue
+        0x191970,  # MidnightBlue
+    ]
+    print_color_blocks(SAMPLE_COLORS)
