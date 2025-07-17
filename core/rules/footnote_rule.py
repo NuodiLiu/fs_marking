@@ -1,7 +1,7 @@
 # core/rules/footnote_rules/footnote_on_habitat_rule.py
 
 from core.rules.base_rule import BaseRule
-from core.utils import fuzzy_match
+from core.utils.utils import fuzzy_match
 
 class FootnoteOnHabitatRule(BaseRule):
     def __init__(self, mark=1, keyword="habitat", expected_note="Natural home or environment"):

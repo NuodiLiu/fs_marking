@@ -1,6 +1,9 @@
 import re
 import difflib
 
+def cm_to_points(cm: float) -> float:
+    return cm * 28.35  # Word: 1cm = 28.35 pt
+
 def validate_zid(zid):
     # Z1234567 or z1234567 or 1234567
     return re.fullmatch(r"(z\d{7}|\d{7})", zid, re.IGNORECASE)
