@@ -25,7 +25,7 @@ class PageBreakBeforeHeadingRule(BaseRule):
                         prev_para = paragraphs[i - 1]
                         prev_text = prev_para.Range.Text
 
-                        if "\x0c" not in prev_text:
+                        if "\x0c" not in prev_text.strip():
                             errors.append(f"No page break immediately before '{self.keyword}'.")
 
                     break  # check the last matched keyword

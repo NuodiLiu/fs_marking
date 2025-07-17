@@ -11,6 +11,12 @@ def load_word_document(path: str):
     word_app.Visible = False  # do not pop up the actual word window
 
     try:
+        while word_app.Documents.Count > 0:
+            doc = word_app.Documents(1)
+            if doc.Saved == 0:  # means not saved
+                doc.Save()
+            doc.Close(SaveChanges=False)
+            
         doc = word_app.Documents.Open(path)
         return doc, word_app
     except Exception as e:

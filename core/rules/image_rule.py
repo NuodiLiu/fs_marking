@@ -32,9 +32,6 @@ class ImageRightOfTextRule(BaseRule):
                     "needs_review": True
                 }
 
-            para_range = best_para.Range
-            para_start = para_range.Start
-            para_end = para_range.End
             page_width = doc.PageSetup.PageWidth
 
             found = False
@@ -45,9 +42,20 @@ class ImageRightOfTextRule(BaseRule):
                 if shape.Type != constants.msoPicture:
                     continue
 
-                anchor_start = shape.Anchor.Start
-                if not (para_start <= anchor_start <= para_end):
-                    continue  # only consider images anchored to the reference paragraph
+                shape_top = shape.Top
+                shape_bottom = shape.Top + shape.Height
+                shape_center = shape.Top + shape.Height / 2
+
+                para_top = best_para.Range.Information(constants.wdVerticalPositionRelativeToPage)
+                para_height = best_para.Range.BoundingRectangle.Height
+                para_bottom = para_top + para_height
+
+                if not (
+                    para_top <= shape_top <= para_bottom or
+                    para_top <= shape_bottom <= para_bottom or
+                    para_top <= shape_center <= para_bottom
+                ):
+                    continue
 
                 found = True  # there's an image anchored to the correct paragraph
 

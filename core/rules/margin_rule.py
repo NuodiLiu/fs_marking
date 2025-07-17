@@ -9,7 +9,7 @@ class MarginRule(BaseRule):
             section = doc.Sections(1).PageSetup
             # Word uses points (pt), 1 cm ≈ 28.35 pt
             expected_margin_pt = 2.5 * 28.35
-            tolerance = 0.01 # +- 0.00035cm to avoid converting error
+            tolerance = 0.1 # +- 0.00035cm to avoid converting error
 
             margins = {
                 "Top": section.TopMargin,

@@ -11,7 +11,7 @@ def get_all_multilevel_checkpoints():
         MultilevelCheckPoint("Is multilevel list", is_multilevel),
 
         MultilevelCheckPoint("Level 1 uses A/B/C format", 
-            lambda ps: is_list_format_matching(ps, r"^[A-Z][\.\)]?$", level=1)
+            lambda ps: is_list_format_matching(ps, r"^[A-Z]$", level=1)
         ),
 
         MultilevelCheckPoint("Level 1 align at 0cm, indent at 1cm", 

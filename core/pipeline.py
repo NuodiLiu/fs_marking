@@ -4,9 +4,7 @@ import os
 import traceback
 from core.document_loader import load_word_document
 from core.rule_engine import evaluate
-from core.result_writer import write_log
 from core.utils.utils import validate_zid
-
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -18,6 +16,8 @@ def find_word_file(student_folder):
     word_files = []
     for root, dirs, files in os.walk(student_folder):
         for file in files:
+            if file.startswith(".") or file.startswith("~"):
+                continue
             if file.lower().endswith((".doc", ".docx")):
                 word_files.append(os.path.join(root, file))
 
@@ -26,8 +26,9 @@ def find_word_file(student_folder):
     elif len(word_files) > 1:
         raise ValueError("❌ Multiple Word files found.")
     return word_files[0]
+    
 
-def run_batch(config):
+def run_batch(config, writer=None):
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
 
@@ -50,10 +51,15 @@ def run_batch(config):
 
             result = evaluate(doc, config.RULES)
 
+            # word COM close
             doc.Close(False)
             word_app.Quit()
+            # python ref delete - based on reference count
+            del doc
+            del word_app
 
-            write_log(zid_folder, result, LOG_DIR)
+            if writer is not None:
+                writer.write(zid_folder, result)
             print(f"✅ Finished {zid_folder}: {result['total']} marks")
 
         except Exception as e:
