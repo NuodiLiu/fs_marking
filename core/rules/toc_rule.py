@@ -7,56 +7,64 @@ class TableOfContentsRule(BaseRule):
 
     def run(self, doc):
         try:
-            found_toc = False
-            extra_text_on_page_2 = False
-
+            # 1. 找到第 2 页的第一个 TOC 字段
+            toc_field = None
             for field in doc.Fields:
-                if field.Type == constants.wdFieldTOC:
-                    page_number = field.Result.Information(constants.wdActiveEndPageNumber)
-                    if page_number == 2:
-                        found_toc = True
+                try:
+                    if (field.Type == constants.wdFieldTOC and
+                        field.Result.Information(constants.wdActiveEndPageNumber) == 2):
+                        toc_field = field
+                        break
+                except:
+                    continue
 
-                        # 检查第 2 页是否还有别的内容
-                        page_2_start = field.Result.Start
-                        page_2_end = field.Result.End
+            if toc_field is None:
+                return {"name": self.name, "mark": 0,
+                        "errors": ["No TOC found on page 2"], "needs_review": False}
 
-                        page_2_range = doc.Range(page_2_start, page_2_end)
+            toc_range = toc_field.Result
+            toc_text = toc_range.Text  # TOC 条目部分文本
 
-                        # 检查是否除了TOC还有其他段落或文字
-                        for para in page_2_range.Paragraphs:
-                            text = para.Range.Text.strip()
-                            if text and "contents" not in text.lower():
-                                extra_text_on_page_2 = True
-                                break
-                        break  # 只看第一个TOC
+            # 2. 定位第 2 页的开始/结束
+            start = end = None
+            for para in doc.Paragraphs:
+                if para.Range.Information(constants.wdActiveEndPageNumber) == 2:
+                    if start is None:
+                        start = para.Range.Start
+                    end = para.Range.End
+            if start is None:
+                return {"name": self.name, "mark": 0,
+                        "errors": ["Could not locate any content on page 2."],
+                        "needs_review": True}
 
-            if not found_toc:
-                return {
-                    "name": self.name,
-                    "mark": 0,
-                    "errors": ["No TOC found on page 2"],
-                    "needs_review": False
-                }
+            page2_range = doc.Range(start, end)
+            page2_text = page2_range.Text
 
-            if extra_text_on_page_2:
-                return {
-                    "name": self.name,
-                    "mark": 0,
-                    "errors": ["Page 2 contains content other than TOC"],
-                    "needs_review": False
-                }
+            # 3. 找出紧靠 TOC 之前的段落，通常就是 “Contents” 这样的标题
+            header_text = ""
+            for para in doc.Paragraphs:
+                if (para.Range.Information(constants.wdActiveEndPageNumber) == 2 and
+                    para.Range.End < toc_range.Start):
+                    header_text = para.Range.Text
+                # 一旦遇到第一个 start > toc_range.Start，就可以跳出
+                if para.Range.Start > toc_range.Start:
+                    break
 
-            return {
-                "name": self.name,
-                "mark": 1,
-                "errors": [],
-                "needs_review": False
-            }
+            # 4. 从整页文本中去掉 header 和 toc_text，再看剩余是否有非空内容
+            cleaned = page2_text
+            for fragment in (header_text, toc_text):
+                if fragment:
+                    cleaned = cleaned.replace(fragment, "")
+
+            if cleaned.strip():
+                return {"name": self.name, "mark": 0,
+                        "errors": ["Page 2 contains content other than TOC"], 
+                        "needs_review": False}
+
+            # 全部检查通过
+            return {"name": self.name, "mark": 1, "errors": [], "needs_review": False}
 
         except Exception as e:
-            return {
-                "name": self.name,
-                "mark": 0,
-                "errors": [f"Error checking TOC on page 2: {str(e)}"],
-                "needs_review": True
-            }
+            return {"name": self.name, "mark": 0,
+                    "errors": [f"Error checking TOC on page 2: {e}"],
+                    "needs_review": True}

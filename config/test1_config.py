@@ -18,8 +18,8 @@ class Test1Config:
             # MarginRule(),
             # CoverPageTitleRule(), # problem - find center
             # CoverPageTableRule(),
-            TableOfContentsRule(),
-            # StrictHeading1Rule(),
+            # TableOfContentsRule(),
+            StrictHeading1Rule(),
             # StrictHeading2Rule(),
             # CombinedStyleRule(),
             # ImageRightOfTextRule(),
