@@ -1,6 +1,9 @@
-import colorsys
-import math
+# GPT has deprecaded info, Font contains ObjectThemeColor, RGB, TintAndShade
 
+import colorsys
+import win32com.client as win32
+from win32com.client import constants
+import math
 try:
     from colormath.color_objects import sRGBColor, LabColor, LCHabColor
     from colormath.color_conversions import convert_color
@@ -15,27 +18,79 @@ except ImportError:
     _HAS_OKLAB = False
 
 
+def apply_tint(base_bgr: int, tint: float) -> int:
+    """
+    把主题色的 BGR 基色 和 tint/shade 应用到一起，
+    返回最终的 BGR（0xBBGGRR）。
+    """
+    b = (base_bgr >> 16) & 0xFF
+    g = (base_bgr >>  8) & 0xFF
+    r =  base_bgr        & 0xFF
+    if tint >= 0:
+        r = int(r + (255 - r) * tint)
+        g = int(g + (255 - g) * tint)
+        b = int(b + (255 - b) * tint)
+    else:
+        r = int(r * (1 + tint))
+        g = int(g * (1 + tint))
+        b = int(b * (1 + tint))
+    return (b << 16) | (g << 8) | r
+
+def apply_tint_rgb(r: int, g: int, b: int, tint: float) -> tuple[int, int, int]:
+    """
+    接受 RGB 分量，返回应用 tint 后的新 RGB。
+    """
+    if tint >= 0:
+        r = int(r + (255 - r) * tint)
+        g = int(g + (255 - g) * tint)
+        b = int(b + (255 - b) * tint)
+    else:
+        r = int(r * (1 + tint))
+        g = int(g * (1 + tint))
+        b = int(b * (1 + tint))
+    return r, g, b
+
+def bgr_to_rgb_tuple(bgr24: int) -> tuple[int,int,int]:
+    b = (bgr24 >> 16) & 0xFF
+    g = (bgr24 >>  8) & 0xFF
+    r =  bgr24        & 0xFF
+    return r, g, b
+
 def int_to_rgb(val: int) -> tuple[int,int,int]:
     return ((val >> 16) & 0xFF,
             (val >>  8) & 0xFF,
             (val      ) & 0xFF)
 
-def is_blue_hsv(rn, gn, bn) -> bool:
-    h, s, v = colorsys.rgb_to_hsv(rn, gn, bn)
+def get_ui_color_rgb(font) -> tuple[int,int,int]:
+    if font.TextColor.ObjectThemeColor != -1:
+        r, g, b = int_to_rgb(font.Color)
+        return apply_tint_rgb(r, g, b, font.TextColor.TintAndShade)
+
+    # —— 2. 回退到标准/自定义色
+    raw = None
+    if hasattr(font, "TextColor"):
+        try:
+            raw = font.TextColor.RGB
+        except Exception:
+            raw = None
+    if raw is None:
+        raw = font.Color
+    bgr24 = raw & 0x00FFFFFF
+    return bgr_to_rgb_tuple(bgr24)
+
+def is_blue_hsl(r: int, g: int, b: int) -> bool:
+    """
+    用 HSL Hue(135-255) + Saturation>=0.15 判断蓝色范围。
+    """
+    rn, gn, bn = r/255.0, g/255.0, b/255.0
+    h, l, s = colorsys.rgb_to_hls(rn, gn, bn)
     deg = h * 360
-    return 180 <= deg <= 240 and s >= 0.25 and v >= 0.2
+    return 135 <= deg <= 255 and s >= 0.15
 
 def is_blue_hsl(rn, gn, bn) -> bool:
     h, l, s = colorsys.rgb_to_hls(rn, gn, bn)
     deg = h * 360
-    return 200 <= deg <= 240 and s >= 0.15
-
-def is_blue_lch(r, g, b) -> bool:
-    if not _HAS_COLORMATH:
-        return False
-    rgb = sRGBColor(r, g, b, is_upscaled=True)
-    lch: LCHabColor = convert_color(rgb, LCHabColor)
-    return 200 <= lch.lch_h <= 260 and lch.lch_c >= 20
+    return 135 <= deg <= 255 and s >= 0.15
 
 def is_blue_lab(r, g, b) -> bool:
     if not _HAS_COLORMATH:
@@ -52,57 +107,32 @@ def is_blue_ycbcr(rn, gn, bn) -> bool:
     cr = (rn - y)*0.713 + 0.5
     return cb > cr and cb >= 0.4
 
-def is_blue_oklab(rn, gn, bn) -> bool:
-    if not _HAS_OKLAB:
-        return False
-    # colourscience: sRGB->XYZ->Oklab
-    xyz = sRGB_to_XYZ([rn, gn, bn])
-    oklab = XYZ_to_OKLab(xyz)
-    # oklab = [L, a, b], b 负代表偏蓝
-    return oklab[2] < -0.02
+# for para range and heading style font only, wordart and textframe should use fillcolor
+def is_font_color_blueish(font, para_format=None) -> bool:
+    """
+    判断给定 Font 的 UI 颜色是否“蓝色”。
+    参数:
+      font         -- win32com.client Dispatch 的 Font 对象
+      para_format  -- win32com.client Dispatch 的 ParagraphFormat（可忽略）
+    返回:
+      True if blue-ish, else False
+    """
+    # —— 获取 UI 上真正的 (r, g, b)
+    r, g, b = get_ui_color_rgb(font)  # 复用之前写好的函数
 
-BLUE = {
-    0x1F497D,  # dk2
-    0x4F81BD,  # accent1
-    0x4BACC6,  # accent5
-    0x0000FF,  # hyperlink
-    0x0000FF,  # Blue
-    0x000080,  # Dark Blue
-    0x00008B,  # DarkBlue (CSS)
-    0x0000CD,  # MediumBlue
-    0x00BFFF,  # DeepSkyBlue
-    0x1E90FF,  # DodgerBlue
-    0x00CED1,  # DarkTurquoise
-    0x00FFFF,  # Aqua / Cyan
-}
-
-def is_blueish(val: int) -> bool:
-    r, g, b = int_to_rgb(val)
+    # —— 打印调试
     block = f"\x1b[48;2;{r};{g};{b}m  \x1b[0m"
-    # 打印 decimal、hex，以及 blue-ish 判断
-    print(f"{block}  dec={val:<6d}  hex=0x{val:06X}")
-    if val in BLUE:
-        return True
-    
-    r, g, b = int_to_rgb(val)
-    rn, gn, bn = r/255., g/255., b/255.
+    print(f"{block} UI RGB=({r},{g},{b}) hex=#{r:02X}{g:02X}{b:02X}")
 
-    # 各空间判断
-    checks = {
-        "HSV":   is_blue_hsv(rn, gn, bn),
-        "HSL":   is_blue_hsl(rn, gn, bn),
-        "LCh":   is_blue_lch(r, g, b),
-        "Lab":   is_blue_lab(r, g, b),
-        "YCbCr": is_blue_ycbcr(rn, gn, bn),
-        "Oklab": is_blue_oklab(rn, gn, bn),
-    }
+    # —— 三空间判断
+    rn, gn, bn = r/255.0, g/255.0, b/255.0
+    vote_hsl   = is_blue_hsl(rn, gn, bn)
+    vote_lab   = is_blue_lab(r, g, b)
+    vote_ycbcr = is_blue_ycbcr(rn, gn, bn)
 
-    # 少于两项可用时，自动去掉对应空间
-    available = [v for v in checks.values() if isinstance(v, bool)]
-    vote_count = sum(available)
-    threshold = math.ceil(len(available) / 2)
+    votes = {"HSL": vote_hsl, "Lab": vote_lab, "YCbCr": vote_ycbcr}
+    count = sum(votes.values())
+    total = len(votes)
+    print(votes, "→", count, "/", total)
 
-    # 调试时可以打印每个空间的投票结果：
-    print({k:v for k,v in checks.items() if isinstance(v,bool)}, "→ votes:", vote_count, "/", len(available))
-
-    return vote_count >= threshold
+    return count >= math.ceil(total / 2)
