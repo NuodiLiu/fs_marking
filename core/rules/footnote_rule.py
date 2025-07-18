@@ -14,20 +14,21 @@ class FootnoteOnHabitatRule(BaseRule):
             errors = []
             found = False
 
-            for word_range in doc.Words:
+            for i, word_range in enumerate(doc.Words):
                 word_text = word_range.Text.strip().rstrip(".,;:!?")
                 if word_text.lower() == self.keyword.lower():
-                    # 找到首次 habitat，检查是否有脚注
-                    if word_range.Footnotes.Count == 0:
-                        errors.append("'habitat' does not have a footnote.")
-                    else:
-                        # 检查内容模糊匹配
-                        note = word_range.Footnotes(1).Range.Text.strip()
+                    found = True
+                    # enumerate(doc.Words) 是 0-based，但 Words.Item(n) 是 从 1 开始的，所以 i + 2 才对应 下一个单词
+                    lookahead = doc.Words.Item(i + 2) if i + 2 <= doc.Words.Count else None
+                    if lookahead and lookahead.Footnotes.Count > 0:
+                        note = lookahead.Footnotes(1).Range.Text.strip()
+                        print("📌 Footnote found in next word:", note)
                         if not fuzzy_match(self.expected_note, note, threshold=0.75):
                             errors.append(f"Footnote content may be incorrect: '{note}'")
-
-                    found = True
-                    break
+                        break
+                    else:
+                        errors.append("'habitat' does not have a footnote.")
+                        break
 
             if not found:
                 errors.append("Could not find the word 'habitat' in the document.")
