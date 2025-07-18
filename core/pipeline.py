@@ -60,7 +60,7 @@ def run_batch(config, writer=None):
 
             if writer is not None:
                 writer.write(zid_folder, result)
-            print(f"✅ Finished {zid_folder}: {result['total']} marks")
+            print(f"✅ Finished {zid_folder}: {result['total']} marks\n\n")
 
         except Exception as e:
             error_msg = f"❌ Failed {zid_folder}: {e}"

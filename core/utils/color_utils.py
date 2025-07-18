@@ -1,21 +1,13 @@
 # GPT has deprecaded info, Font contains ObjectThemeColor, RGB, TintAndShade
 
 import colorsys
-import win32com.client as win32
-from win32com.client import constants
 import math
 try:
-    from colormath.color_objects import sRGBColor, LabColor, LCHabColor
+    from colormath.color_objects import sRGBColor, LabColor
     from colormath.color_conversions import convert_color
     _HAS_COLORMATH = True
 except ImportError:
     _HAS_COLORMATH = False
-
-try:
-    from colour import XYZ_to_OKLab, sRGB_to_XYZ
-    _HAS_OKLAB = True
-except ImportError:
-    _HAS_OKLAB = False
 
 
 def apply_tint(base_bgr: int, tint: float) -> int:

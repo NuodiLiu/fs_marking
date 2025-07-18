@@ -33,3 +33,5 @@ def setup_logger(name: str) -> logging.Logger:
         logger.addHandler(fh)
 
     return logger
+
+logger = setup_logger("default")
