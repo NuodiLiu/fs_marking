@@ -23,9 +23,9 @@ class Test1Config:
             # StrictHeading2Rule(),
             # CombinedStyleRule(),
             # ImageRightOfTextRule(),
-            FootnoteOnHabitatRule(),
+            # FootnoteOnHabitatRule(),
             # FooterRule(),
-            # CombinedMultilevelListRule(),
+            CombinedMultilevelListRule(),
             # PageBreakBeforeHeadingRule(),
             # ReferencesHangingIndentRule(),
         ]

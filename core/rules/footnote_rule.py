@@ -22,7 +22,6 @@ class FootnoteOnHabitatRule(BaseRule):
                     lookahead = doc.Words.Item(i + 2) if i + 2 <= doc.Words.Count else None
                     if lookahead and lookahead.Footnotes.Count > 0:
                         note = lookahead.Footnotes(1).Range.Text.strip()
-                        print("📌 Footnote found in next word:", note)
                         if not fuzzy_match(self.expected_note, note, threshold=0.75):
                             errors.append(f"Footnote content may be incorrect: '{note}'")
                         break

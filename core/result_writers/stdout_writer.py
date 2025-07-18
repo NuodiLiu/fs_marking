@@ -14,5 +14,5 @@ class StdoutWriter:
             for err in errors:
                 print(f"     - {err}")
 
-        if result.get("needs_review", False):
-            print("⚠️  Manual review required.")
+            if result.get("needs_review", False):
+                print("⚠️  Manual review required.")
