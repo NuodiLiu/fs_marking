@@ -1,6 +1,8 @@
 from core.rules.base_rule import BaseRule
-from core.rules.multilevel_list_rules.multilevel_checkpoints_list import get_all_multilevel_checkpoints
+from core.rules.multilevel_list_rules.multilevel_checkpoints_list import \
+    get_all_multilevel_checkpoints
 from core.utils.utils import fuzzy_match
+
 
 class CombinedMultilevelListRule(BaseRule):
     EXPECTED_LINES = [

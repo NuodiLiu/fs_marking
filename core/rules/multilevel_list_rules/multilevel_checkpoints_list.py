@@ -1,10 +1,10 @@
-from .multilevel_checkpoints import MultilevelCheckPoint
-from core.utils.list_utils import (
-    is_multilevel,
-    is_list_format_matching,
-    check_level_indent_exact,
-)
 from win32com.client import constants
+
+from core.utils.list_utils import (check_level_indent_exact,
+                                   is_list_format_matching, is_multilevel)
+
+from .multilevel_checkpoints import MultilevelCheckPoint
+
 
 def get_all_multilevel_checkpoints():
     return [
