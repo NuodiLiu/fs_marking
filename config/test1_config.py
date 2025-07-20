@@ -15,19 +15,19 @@ from core.rules.style_setting_rules.combined_style_rule import CombinedStyleRule
 class Test1Config:
     def __init__(self):
         self.RULES = [
-            # MarginRule(),
-            # CoverPageTitleRule(), # problem - find center
-            # CoverPageTableRule(),
-            # TableOfContentsRule(),
-            # StrictHeading1Rule(),
-            # StrictHeading2Rule(),
-            # CombinedStyleRule(),
-            # ImageRightOfTextRule(),
-            # FootnoteOnHabitatRule(),
-            # FooterRule(),
+            MarginRule(),
+            CoverPageTitleRule(), # problem - find center
+            CoverPageTableRule(),
+            TableOfContentsRule(),
+            StrictHeading1Rule(),
+            StrictHeading2Rule(),
+            CombinedStyleRule(),
+            ImageRightOfTextRule(),
+            FootnoteOnHabitatRule(),
+            FooterRule(),
             CombinedMultilevelListRule(),
-            # PageBreakBeforeHeadingRule(),
-            # ReferencesHangingIndentRule(),
+            PageBreakBeforeHeadingRule(),
+            ReferencesHangingIndentRule(),
         ]
 
 test1_config = Test1Config()
