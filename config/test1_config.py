@@ -19,7 +19,7 @@ class Test1Config:
     def __init__(self):
         self.RULES = [
             MarginRule(),
-            # CoverPageTitleRule(), # problem - find center
+            CoverPageTitleRule(), # problem - find center
             CoverPageTableRule(),
             TableOfContentsRule(),
             StrictHeading1Rule(),

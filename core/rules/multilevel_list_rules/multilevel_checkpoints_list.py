@@ -14,7 +14,7 @@ def get_all_multilevel_checkpoints():
             lambda ps: is_list_format_matching(ps, r"^[A-Z]$", level=1)
         ),
 
-        MultilevelCheckPoint("Level 1 align at 0cm, indent at 1cm", 
+        MultilevelCheckPoint("Level 1 should align at 0cm, indent at 1cm", 
             lambda ps: check_level_indent_exact(ps, level=1, expected_align=0, expected_indent=1)
         ),
 
@@ -22,7 +22,7 @@ def get_all_multilevel_checkpoints():
             lambda ps: is_list_format_matching(ps, r"^(?!\u2022$).+", level=2) # not a circle
         ),
 
-        MultilevelCheckPoint("Level 2 align at 1cm, indent at 2cm", 
+        MultilevelCheckPoint("Level 2 should align at 1cm, indent at 2cm", 
             lambda ps: check_level_indent_exact(ps, level=2, expected_align=1, expected_indent=2)
         ),
     ]

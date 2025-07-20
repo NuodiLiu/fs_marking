@@ -18,6 +18,7 @@ def evaluate(doc, rules):
     """
     total = 0
     results = []
+    needs_review = False
 
     for rule in rules:
         try:
@@ -27,10 +28,12 @@ def evaluate(doc, rules):
             result.setdefault("name", rule.__class__.__name__)
             result.setdefault("mark", 0)
             result.setdefault("errors", [])
-            result.setdefault("needs_review", False)
+            result.setdefault("needs_review", True)
 
             results.append(result)
             total += result["mark"]
+            if result["needs_review"]:
+                needs_review = True
 
         except Exception as e:
             # If a rule fails, it doesn't affect the rest
@@ -39,8 +42,10 @@ def evaluate(doc, rules):
                 "mark": 0,
                 "errors": [f"Rule execution error: {str(e)}"]
             })
+            needs_review = True
 
     return {
         "total": total,
-        "results": results
+        "results": results,
+        "needs_review": needs_review
     }
