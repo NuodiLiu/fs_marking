@@ -12,7 +12,7 @@ class CoverPageTitleRule(BaseRule):
         try:
             page_width = doc.PageSetup.PageWidth
             center_x = page_width / 2
-            tolerance = 50  # pt
+            tolerance = 20  # pt around 1cm
             errors = []
 
             for i, shape in enumerate(doc.Shapes):
@@ -53,6 +53,20 @@ class CoverPageTitleRule(BaseRule):
 
                     if not fuzzy_match(self.expected_title, text, threshold=0.8):
                         errors.append(f"Text box text '{text}' does not match expected title '{self.expected_title}'.")
+                        continue
+                    
+                    print(f"  Left: {shape.Left} pt")
+                    print(f"  RelativeHorizontalPosition: {shape.RelativeHorizontalPosition}")
+                    if shape.Left == constants.wdShapeCenter:
+                        pass
+                    elif shape.Left >= 0:
+                        shape_center = shape.Left + shape.Width / 2
+                        # print(f"📐 ShapeWidth = {shape.Width:.2f}, Center = {shape_center:.2f}, Page center = {center_x:.2f}")
+                        if abs(shape_center - center_x) > tolerance:
+                            errors.append(f"Shape is not approximately centered on the page. Shifting > tolerance({tolerance}pt)")
+                            continue
+                    else:
+                        errors.append(f"Program doesn't have enought information to decide textframe position. Textbox.Left = {shape.Left}")
                         continue
 
                     # ✅ Passed all checks

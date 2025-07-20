@@ -22,11 +22,11 @@ This rule checks the title on the cover page. It looks for three things:
    - The match must be at least 80% correct.
 
 2. **The title must be a WordArt**
-   - It must be a special WordArt object (not normal text).
+   - It must be a special WordArt object (not normal text with effects).
    - Only shapes on the first page are checked.
 
 3. **The title must be roughly centered**
-   - The title should be close to the center of the page (within 50pt left or right).
+   - The title should be close to the center of the page (within 20pt(around 0.7cm) left or right).
    - It checks if the middle of the title is near the middle of the page.
 
 If all 3 are OK → 1 mark.  
