@@ -1,7 +1,9 @@
 # core/pipeline.py
 
 import os
+import time
 import traceback
+
 from core.document_loader import load_word_document
 from core.rule_engine import evaluate
 from core.utils.utils import validate_zid
@@ -13,6 +15,7 @@ SUBMISSION_DIR = os.path.join(ROOT_DIR, "data", "submissions")
 LOG_DIR = os.path.join(ROOT_DIR, "logs")
 
 def find_word_file(student_folder):
+    time.sleep(0.5)
     word_files = []
     for root, dirs, files in os.walk(student_folder):
         for file in files:
