@@ -30,4 +30,27 @@ class Test1Config:
             ReferencesHangingIndentRule(),
         ]
 
+        self.OUTPUT = {
+        # The input excel file
+        "template_path": "template/marking_template.xlsx",
+        # The output result file
+        "output_path":   "logs/summary.xlsx",
+        "sheet_name":    "Summary",
+        "header_row":    1,
+        "zid_row":       2,
+        "margin_row":    4,
+        "cover_page_row":5,
+        "ToC_row":       6,
+        "H1_row":        7,
+        "H2_row":        8,
+        "styles":        9,
+        "picture_row":   10,
+        "Habitat_row":   11,
+        "Footer_row":    12,
+        "Multilist_row": 13,
+        "pageBreak_row": 14,
+        "Indent_row":    15,
+        "total_row":     16,
+}
+
 test1_config = Test1Config()

@@ -62,6 +62,7 @@ class ExcelSummaryWriter:
             row_2 = list(sheet.iter_rows(min_row=2, max_row=2, values_only=True))[0]
             for col_idx in range(6, sheet.max_column + 1):
                 zid_value = row_2[col_idx - 1]
+
                 if isinstance(zid_value, str) and zid.lower() in zid_value.lower():
                     for i, (mark, needs_review) in enumerate(zip(marks, needs_review_list)):
                         cell = sheet.cell(row=4 + i, column=col_idx)
@@ -79,3 +80,4 @@ class ExcelSummaryWriter:
             self.save()
         except Exception as e:
             print(f"❌ Failed to save Excel file: {e}")
+
