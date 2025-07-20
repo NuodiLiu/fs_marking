@@ -229,6 +229,7 @@ This rule checks if the word **"habitat"** has a correct footnote.
 ### ✅ Footer Checkpoints
 
 This rule checks if the document footer is correctly set up.
+This checking is strict. Any footer content error will be marked to review.
 
 ---
 

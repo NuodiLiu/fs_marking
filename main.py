@@ -2,6 +2,9 @@
 import win32com.client.gencache
 
 from core.result_writers.excel_summary_writer import ExcelSummaryWriter
+
+from core.result_writers.feedback_writer import FeedbackWriter
+
 win32com.client.gencache.EnsureModule('{00020905-0000-0000-C000-000000000046}', 0, 8, 7)
 win32com.client.gencache.EnsureModule('{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}', 0, 2, 8)
 
@@ -16,7 +19,7 @@ def main():
     validate_config(config)
 
     excel_writer = ExcelSummaryWriter()
-    writer = ResultWriter([StdoutWriter(), excel_writer])
+    writer = ResultWriter([StdoutWriter(), FeedbackWriter(), excel_writer])
 
     run_batch(config, writer)
     excel_writer.save()
