@@ -1,64 +1,62 @@
-# core/result_writers/excel_summary_writer.py
+# core/writers/excel_writer.py
+
 import os
 from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
+from typing import Optional
 
 class ExcelSummaryWriter:
-    def __init__(
-        self,
-        template_path: str,
-        output_path:   str,
-        sheet_name:    str,
-        zid_row:       int,
-        rule_rows:     dict,   # {"margin":4, "cover_page":5, ...}
-        total_row:     int,
-    ):
-        self.template_path = template_path
-        self.output_path   = output_path
-        self.sheet_name    = sheet_name
-        self.zid_row       = zid_row
-        self.rule_rows     = rule_rows
-        self.total_row     = total_row
-        self.cache         = {}    # {zid: result_dict}
+    def __init__(self, summary_path="logs/summary.xlsx"):
+        self.path = summary_path
+        self.wb = load_workbook(self.path)
+        self.RULE_ROW_MAPPING = [
+            0,                      # MarginRule
+            (1, 2),                 # CoverPageTitleRule + CoverPageTableRule → merge
+            3,                      # TableOfContentsRule
+            4,                      # StrictHeading1Rule
+            5,                      # StrictHeading2Rule
+            6,                      # CombinedStyleRule
+            7,                      # ImageRightOfTextRule
+            8,                      # FootnoteOnHabitatRule
+            9,                      # FooterRule
+            10,                     # CombinedMultilevelListRule
+            11                      # PageBreakBeforeHeadingRule / ReferencesHangingIndentRule
+        ]
+    def _convert_result_to_excel_marks(self, result: dict) -> list[int]:
+    """
+    Convert 13-rule result into 12-row mark list for Excel, with merge logic applied.
+    """
+        results = result["results"]
+        marks = [None] * 12
 
-    # 收集单个学生结果
+        for i, rule_map in enumerate(self.RULE_ROW_MAPPING):
+        if isinstance(rule_map, tuple):
+            combined_mark = sum(results[idx]["mark"] for idx in rule_map)
+            marks[i] = combined_mark
+        else:
+            marks[i] = results[rule_map]["mark"]
+        return marks
+
     def write(self, zid: str, result: dict):
-        self.cache[str(zid)] = result
-
+    """
+    Write the result for the given zid into the correct column of all sheets.
+    """
+        marks = self._convert_result_to_excel_marks(result)
+        total = result.get("total")
+        
+        for sheet in self.wb.worksheets:
+            row_2 = list(sheet.iter_rows(min_row=2, max_row=2, values_only=True))[0]
+            for col_idx in range(6, sheet.max_column + 1):
+                zid_value = row_2[col_idx - 1]
+                if isinstance(zid_value, str) and zid_value == zid:
+                    start_row = 4
+                    for offset, mark in enumerate(marks):
+                        sheet.cell(row=start_row+offset, column=col_idx, value=mark)
+                    sheet.cell(row=16, column=col_idx, value=total)
+                    break
     def save(self):
-        folder = os.path.dirname(self.output_path)
-        if folder:
-            os.makedirs(folder, exist_ok=True)
+        directory = os.path.dirname(self.path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        self.wb.save(self.path)
 
-        wb = load_workbook(self.template_path)
-        ws = wb[self.sheet_name]
-
-        # 1) ZID -> col
-        zid2col = {
-            str(cell.value): cell.col_idx
-            for cell in ws[self.zid_row] 
-            if cell.value
-        }
-
-        # 2) 写入
-        for zid, res in self.cache.items():
-            col = zid2col.get(zid)
-            if not col:
-                print(f"⚠️ ZID {zid} 不在模板中，跳过")
-                continue
-
-            # 写规则分
-            for item in res["results"]:
-                rule = item["name"].lower()
-                mark = item["mark"]
-                row  = self.rule_rows.get(rule)
-                if row:
-                    ws.cell(row=row, column=col, value=mark)
-                else:
-                    print(f"⚠️ 模板缺少规则行 {rule}")
-
-            # 写总分
-            if self.total_row:
-                ws.cell(row=self.total_row, column=col, value=res["total"])
-
-        wb.save(self.output_path)
-        print(f"✔️ 结果已写入 {self.output_path}")
