@@ -1,5 +1,7 @@
 This project currently only designed for one test to achieve MVP, adding/modifing logics for rules classes folder is required if makring requirments changes . We further think to make it modulable so that user can customize rules.
 
+To use it:
+Make sure you have data/submissions and data/output.xlsx (data folder is in the root), this is designed to align with current marking template we are using. Submissions folder should contain all students' final exam word documents.
 
 ### ✅ Margin Checkpoints (Simple English)
 
