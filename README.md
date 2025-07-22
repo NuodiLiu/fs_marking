@@ -1,3 +1,6 @@
+This project currently only designed for one test to achieve MVP, adding/modifing logics for rules classes folder is required if makring requirments changes . We further think to make it modulable so that user can customize rules.
+
+
 ### ✅ Margin Checkpoints (Simple English)
 
 This rule checks if the page margins are correct on the first section of the Word document.
