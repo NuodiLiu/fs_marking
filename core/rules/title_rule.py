@@ -14,6 +14,7 @@ class CoverPageTitleRule(BaseRule):
             center_x = page_width / 2
             tolerance = 20  # pt around 1cm
             errors = []
+            needs_review = False
 
             for i, shape in enumerate(doc.Shapes):
                 try:
@@ -67,6 +68,7 @@ class CoverPageTitleRule(BaseRule):
                             continue
                     else:
                         errors.append(f"Program doesn't have enought information to decide textframe position. Textbox.Left = {shape.Left}")
+                        needs_review = True
                         continue
 
                     # ✅ Passed all checks
@@ -87,7 +89,7 @@ class CoverPageTitleRule(BaseRule):
                 "name": self.name,
                 "mark": 0,
                 "errors": errors,
-                "needs_review": False
+                "needs_review": needs_review
             }
 
         except Exception as e:

@@ -8,13 +8,14 @@ class CoverPageTableRule(BaseRule):
 
     def run(self, doc):
         try:
-            word_art_bottom = 0
+            word_art_bottom = -1
             # 找到第一页上的 WordArt 的底部位置
             for shape in doc.Shapes:
                 if shape.Type == constants.msoTextBox:
                     page_num = shape.Anchor.Information(constants.wdActiveEndPageNumber)
                     if page_num == 1:
                         word_art_bottom = max(word_art_bottom, shape.Top + shape.Height)
+                        print(shape.Left)
             
             valid_styles = [
                 "Grid Table 4 - Accent 1",
@@ -57,7 +58,12 @@ class CoverPageTableRule(BaseRule):
                 # ✅ 检查位置是否在 WordArt 之后（下方）
                 try:
                     table_top = table.Range.Information(constants.wdVerticalPositionRelativeToPage)
-                    if table_top >= word_art_bottom:
+                    print(table_top)
+
+                    if word_art_bottom == -1:
+                        # wordart doesn't found
+                        pass
+                    elif table_top <= word_art_bottom:
                         errors.append("Table appears above WordArt.")
                 except Exception:
                     # 有些 table.Top 在某些 Word 版本中可能不可访问

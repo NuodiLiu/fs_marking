@@ -176,6 +176,7 @@ This rule checks that a picture is correctly placed next to the paragraph beginn
 > "The Australian White Ibis (Threskiornis molucca) is a distinctive bird species..."
 
 It checks the following:
+(4 and 5 is making sure the picture doesn't look weird)
 
 1. **The picture must be anchored to the correct paragraph**
    - Uses fuzzy match to find the correct paragraph.
@@ -230,6 +231,8 @@ This rule checks if the word **"habitat"** has a correct footnote.
 
 This rule checks if the document footer is correctly set up.
 This checking is strict. Any footer content error will be marked to review.
+There are some limitation of this problem. It can only detect when it's all correct or all error or partialy correct without footer content error.
+All footer content error will be marked as manual review.
 
 ---
 
@@ -305,8 +308,9 @@ This rule checks that the heading **“SUMMARY”** starts on a new page using a
 ### ✅ The check:
 
 1. Finds the **last appearance** with the text `"SUMMARY"` (case-insensitive).
-2. Checks if the paragraph **before it** ends with a **manual page break** (`\x0c`).
+2. Checks if the paragraph **between it and previous text** contains one and only one **manual page break** (`\x0c`).
 3. Ignores TOC entries by searching from the end of the document.
+4. allowing empty spaces/returns but must have one page break
 
 ---
 
@@ -316,7 +320,7 @@ This rule checks that the heading **“SUMMARY”** starts on a new page using a
 - ❌ **0 mark** if:
   - "SUMMARY" is missing,
   - It is the first paragraph,
-  - Or no page break is found immediately before it.
+  - Or no page break is found before it and previous paragraph.
 
 Any problem is reported with an error message.
 
