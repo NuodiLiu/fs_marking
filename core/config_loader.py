@@ -18,7 +18,7 @@ class ExamConfig:
     This is what Pipeline expects - a clean interface with rules and output config.
     """
     
-    def __init__(self, exam_info: Dict[str, Any], rules: List[BaseRule], output: Dict[str, Any], merge_rules: List[Dict[str, Any]] = None):
+    def __init__(self, exam_info: Dict[str, Any], rules: List[BaseRule], output: Dict[str, Any], merge_rules: List[Dict[str, Any]] = None, source_module: str = None):
         """
         Initialize exam configuration.
         
@@ -27,6 +27,7 @@ class ExamConfig:
             rules: List of rule instances
             output: Output configuration (paths, mappings, etc.)
             merge_rules: Optional merge configuration for grouping rules
+            source_module: Source module name (e.g., 'config.exam_feb11_config')
         """
         self.name = exam_info.get("name", "Unnamed Exam")
         self.code = exam_info.get("code", "unknown")
@@ -36,6 +37,7 @@ class ExamConfig:
         self.rules = rules
         self.output = output
         self.merge_rules = merge_rules or []
+        self.source_module = source_module
     
     def __repr__(self):
         return f"ExamConfig(name='{self.name}', code='{self.code}', rules={len(self.rules)})"
@@ -129,7 +131,12 @@ class ConfigLoader:
                 raise ValueError(f"Cannot find config variable in module {module_name}")
         
         config_dict = getattr(module, config_var_name)
-        return ConfigLoader.load_from_dict(config_dict)
+        exam_config = ConfigLoader.load_from_dict(config_dict)
+        
+        # Set source module for parallel processing
+        exam_config.source_module = module_name
+        
+        return exam_config
     
     @staticmethod
     def _build_rules(rules_config: List[Any]) -> List[BaseRule]:

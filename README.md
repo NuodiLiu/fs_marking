@@ -13,7 +13,7 @@ To use it:
 3. Make sure you have:
    1. data/submissions which contains all students MSWord final exam submission document, a reader will try to open this folder and create word instances
    2. data/output.xlsx (data folder is in the root), this is designed to align with current marking template we are using.
-4. run "python3 main.py"
+4. run "python3 main.py exam_feb11" or run in parallel "python main.py exam_feb11 --parallel -j 8"
 
 Below are some example marking critiria used for a certain exam:
 ### ✅ Margin Checkpoints

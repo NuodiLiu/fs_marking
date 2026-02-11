@@ -9,13 +9,18 @@ from typing import Optional
 class ExcelSummaryWriter:
     def __init__(self, summary_path="data/output.xlsx"):
         self.path = summary_path
+        self.wb = None  # Initialize to None first
+        
         if not os.path.exists(self.path):
             raise FileNotFoundError(
                 f"❌ Cannot find Excel summary file at '{self.path}'. "
                 "Please make sure the template exists before running."
             )
         
-        self.wb = load_workbook(self.path)
+        try:
+            self.wb = load_workbook(self.path)
+        except Exception as e:
+            raise RuntimeError(f"❌ Cannot load Excel file '{self.path}': {e}")
 
     def write(self, zid: str, result: dict):
         """
@@ -64,10 +69,22 @@ class ExcelSummaryWriter:
                     break  # Found the column, move to next sheet
 
     def save(self, output_path: Optional[str] = None):
-        self.wb.save(output_path or self.path)
-
-    def __del__(self):
+        """Save the Excel workbook."""
+        if self.wb is None:
+            print("⚠️  Warning: Excel workbook not loaded, skipping save")
+            return
+        
         try:
-            self.save()
+            self.wb.save(output_path or self.path)
         except Exception as e:
             print(f"❌ Failed to save Excel file: {e}")
+            raise
+
+    def __del__(self):
+        """Destructor to ensure Excel file is saved."""
+        if self.wb is not None:
+            try:
+                self.save()
+            except Exception as e:
+                # Already printed in save(), don't print again
+                pass

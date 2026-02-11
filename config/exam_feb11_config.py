@@ -11,7 +11,7 @@
 
 COVER_PAGE_CONFIG = {
     "exam": {
-        "name": "Cover Page Example",
+        "name": "Feb 11 Exam",
         "total_marks": 11
     },
     

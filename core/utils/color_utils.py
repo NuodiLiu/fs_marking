@@ -114,7 +114,7 @@ def is_font_color_blueish(font, para_format=None) -> bool:
 
     # —— 打印调试
     block = f"\x1b[48;2;{r};{g};{b}m  \x1b[0m"
-    print(f"{block} UI RGB=({r},{g},{b}) hex=#{r:02X}{g:02X}{b:02X}")
+    # print(f"{block} UI RGB=({r},{g},{b}) hex=#{r:02X}{g:02X}{b:02X}")
 
     # —— 三空间判断
     rn, gn, bn = r/255.0, g/255.0, b/255.0
@@ -125,7 +125,7 @@ def is_font_color_blueish(font, para_format=None) -> bool:
     votes = {"HSL": vote_hsl, "Lab": vote_lab, "YCbCr": vote_ycbcr}
     count = sum(votes.values())
     total = len(votes)
-    print(votes, "→", count, "/", total)
+    # print(votes, "→", count, "/", total)
 
     return count >= math.ceil(total / 2)
 

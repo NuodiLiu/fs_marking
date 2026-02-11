@@ -2,9 +2,17 @@
 Configurable rule that composes multiple atomic check units.
 """
 
+import time
 from core.rules.base_rule import BaseRule
 from core.checks.registry import get_check
 from typing import List, Dict, Any
+
+# COM error codes that are retriable (Word is alive but busy)
+_RETRIABLE_COM_CODES = {
+    -2147418111,  # RPC_E_CALL_REJECTED - Word busy, rejecting calls
+    -2147417846,  # RPC_E_SERVERCALL_RETRYLATER
+}
+
 
 
 class ConfigurableRule(BaseRule):
@@ -92,7 +100,7 @@ class ConfigurableRule(BaseRule):
         # Run all checks
         for i, check in enumerate(self.check_instances):
             try:
-                success, error_msg = check.check(doc)
+                success, error_msg = self._run_check_with_retry(check, doc)
                 
                 if success:
                     passed_count += 1
@@ -121,6 +129,42 @@ class ConfigurableRule(BaseRule):
             "needs_review": needs_review
         }
     
+    def _run_check_with_retry(self, check, doc, max_retries=3):
+        """
+        Run a check with automatic retry for RPC_E_CALL_REJECTED errors.
+        
+        When Word is busy (e.g. under high concurrency), COM calls get rejected
+        with -2147418111. This is transient - retrying after a brief wait works.
+        
+        Args:
+            check: Check instance to execute
+            doc: Word document COM object
+            max_retries: Maximum retry attempts
+            
+        Returns:
+            (success, error_msg) tuple from the check
+        """
+        for attempt in range(max_retries):
+            try:
+                return check.check(doc)
+            except Exception as e:
+                # Extract COM error code if available
+                error_code = getattr(e, 'hresult', None)
+                if error_code is None and hasattr(e, 'args') and len(e.args) >= 1:
+                    if isinstance(e.args[0], int):
+                        error_code = e.args[0]
+                
+                if error_code in _RETRIABLE_COM_CODES and attempt < max_retries - 1:
+                    # Word is busy - wait with exponential backoff and retry
+                    wait = 0.2 * (2 ** attempt)  # 0.2s, 0.4s, 0.8s
+                    time.sleep(wait)
+                    continue
+                else:
+                    raise  # Non-retriable or exhausted retries
+        
+        # Should not reach here, but just in case
+        return check.check(doc)
+
     def _calculate_mark(self, passed: int, total: int) -> int:
         """
         Calculate mark based on scoring mode.
