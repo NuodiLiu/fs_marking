@@ -17,7 +17,10 @@ from core.checks.section_checks import (
 from core.checks.objects.shape_checks import (
     PageHasShapeCheck,
     ShapeContainsTextCheck,
-    ShapeCountCheck
+    ShapeCountCheck,
+    ShapeTypeCheck,
+    ShapePositionCheck,
+    ShapeWrapFormatCheck
 )
 from core.checks.objects.table_checks import (
     PageHasTableCheck,
@@ -30,6 +33,28 @@ from core.checks.objects.table_checks import (
 from core.checks.formatting.style_checks import (
     StyleFontCheck,
     StyleParagraphFormatCheck
+)
+from core.checks.formatting.paragraph_checks import (
+    ParagraphFormatCheck
+)
+from core.checks.formatting.list_checks import (
+    SimpleBulletListCheck,
+    MultilevelListItemCheck
+)
+from core.checks.content.toc_checks import (
+    HasTOCCheck,
+    TOCOnSeparatePageCheck
+)
+from core.checks.layout.section_structure_checks import (
+    SectionCountCheck
+)
+from core.checks.content.text_checks import (
+    TextOccurrenceCheck,
+    LastHeadingCheck,
+    LastParagraphCheck
+)
+from core.checks.content.footnote_checks import (
+    FootnoteCheck
 )
 
 
@@ -57,6 +82,9 @@ CHECK_REGISTRY = {
     "page_has_shape": PageHasShapeCheck,
     "shape_contains_text": ShapeContainsTextCheck,
     "shape_count": ShapeCountCheck,
+    "shape_type": ShapeTypeCheck,
+    "shape_position": ShapePositionCheck,
+    "shape_wrap_format": ShapeWrapFormatCheck,
     
     # Table checks
     "page_has_table": PageHasTableCheck,
@@ -69,6 +97,28 @@ CHECK_REGISTRY = {
     # Style checks
     "style_font": StyleFontCheck,
     "style_paragraph_format": StyleParagraphFormatCheck,
+    
+    # Paragraph format checks
+    "paragraph_format": ParagraphFormatCheck,
+    
+    # List format checks
+    "simple_bullet_list": SimpleBulletListCheck,
+    "multilevel_list_item": MultilevelListItemCheck,
+    
+    # TOC checks
+    "has_toc": HasTOCCheck,
+    "toc_on_separate_page": TOCOnSeparatePageCheck,
+    
+    # Section structure checks
+    "section_count": SectionCountCheck,
+    
+    # Text occurrence and position checks
+    "text_occurrence": TextOccurrenceCheck,
+    "last_heading": LastHeadingCheck,
+    "last_paragraph": LastParagraphCheck,
+    
+    # Footnote checks
+    "footnote": FootnoteCheck,
 }
 
 

@@ -24,12 +24,6 @@ class MarginCheck(BaseCheck):
             tolerance: Allowed deviation in cm (default 0.01cm to handle rounding)
             section_index: Which section to check (default 1)
         """
-        super().__init__(
-            side=side,
-            expected_cm=expected_cm,
-            tolerance=tolerance,
-            section_index=section_index
-        )
         self.side = side
         self.expected_cm = expected_cm
         self.tolerance = tolerance
@@ -90,11 +84,6 @@ class AllMarginsCheck(BaseCheck):
             tolerance: Allowed deviation in cm
             section_index: Which section to check (default 1)
         """
-        super().__init__(
-            expected_cm=expected_cm,
-            tolerance=tolerance,
-            section_index=section_index
-        )
         self.expected_cm = expected_cm
         self.tolerance = tolerance
         self.section_index = section_index

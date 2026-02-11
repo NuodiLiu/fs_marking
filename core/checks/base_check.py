@@ -15,16 +15,10 @@ class BaseCheck(ABC):
     2. Check ONE specific thing
     3. Return clear success/failure status with error messages
     4. Be independently testable
-    """
     
-    def __init__(self, **params):
-        """
-        Initialize check with parameters.
-        
-        Args:
-            **params: Check-specific parameters
-        """
-        self.params = params
+    Note: Subclasses should define their own __init__ with explicit parameters
+    for better type checking and IDE support.
+    """
     
     @abstractmethod
     def check(self, doc) -> Tuple[bool, str]:
@@ -42,4 +36,6 @@ class BaseCheck(ABC):
         pass
     
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.params})"
+        # Get all instance attributes for representation
+        attrs = {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
+        return f"{self.__class__.__name__}({attrs})"

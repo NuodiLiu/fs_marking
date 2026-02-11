@@ -16,21 +16,43 @@ def get_section_for_page(doc, page_num):
         如果找不到返回 (None, False)
     """
     try:
+        # 如果只有一个section，直接返回（处理未分节的文档）
+        if doc.Sections.Count == 1:
+            section = doc.Sections(1)
+            # 判断是否是第一页（第一个section的起始页就是第1页）
+            is_first_page = (page_num == 1)
+            return (section, is_first_page)
+        
+        # 多个section的情况，尝试精确定位
         for section in doc.Sections:
-            # 获取section的起始和结束页码
-            section_start = section.Range.Information(constants.wdActiveEndPageNumber)
-            section_end_range = section.Range
-            section_end_range.Collapse(constants.wdCollapseEnd)
-            section_end = section_end_range.Information(constants.wdActiveEndPageNumber)
-            
-            # 判断page_num是否在这个section范围内
-            if section_start <= page_num <= section_end:
-                is_first_page = (page_num == section_start)
-                return (section, is_first_page)
+            try:
+                # 获取section的起始和结束页码
+                section_start = section.Range.Information(constants.wdActiveEndPageNumber)
+                section_end_range = section.Range
+                section_end_range.Collapse(constants.wdCollapseEnd)
+                section_end = section_end_range.Information(constants.wdActiveEndPageNumber)
+                
+                # 判断page_num是否在这个section范围内
+                if section_start <= page_num <= section_end:
+                    is_first_page = (page_num == section_start)
+                    return (section, is_first_page)
+            except:
+                # 单个section处理失败，继续下一个
+                continue
+        
+        # 如果无法精确定位，对于第1页，返回第一个section
+        if page_num == 1 and doc.Sections.Count > 0:
+            return (doc.Sections(1), True)
         
         return (None, False)
     
     except Exception as e:
+        # 最后的异常处理：如果有section，返回第一个
+        try:
+            if doc.Sections.Count > 0:
+                return (doc.Sections(1), page_num == 1)
+        except:
+            pass
         return (None, False)
 
 

@@ -2,10 +2,14 @@
 
 class StdoutWriter:
     def write(self, zid: str, result: dict):
-        print(f"\n🧾 Debug Output for {zid}")
+        print(f"🧾 Debug Output for {zid}")
         print(f"Total Score: {result['total']}")
 
         for rule in result["results"]:
+            # Skip placeholder rules
+            if rule.get("placeholder", False):
+                continue
+            
             name = rule["name"]
             mark = rule["mark"]
             print(f"  • {name}: {mark} mark")
@@ -16,3 +20,5 @@ class StdoutWriter:
 
         if result.get("needs_review", False):
             print("⚠️  Manual review required.")
+
+        print()

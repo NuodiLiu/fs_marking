@@ -4,7 +4,7 @@ Configurable rule that composes multiple atomic check units.
 
 from core.rules.base_rule import BaseRule
 from core.checks.registry import get_check
-from typing import List, Tuple, Dict, Any
+from typing import List, Dict, Any
 
 
 class ConfigurableRule(BaseRule):
@@ -15,7 +15,7 @@ class ConfigurableRule(BaseRule):
     specifying which checks to run and how to score them.
     """
     
-    def __init__(self, name: str, mark: int, checks: List[Tuple[str, Dict[str, Any]]], 
+    def __init__(self, name: str, mark: int, checks: List[Dict[str, Any]], 
                  scoring: str = "all_or_nothing", min_pass: int = None, 
                  needs_review_on_error: bool = False):
         """
@@ -24,8 +24,8 @@ class ConfigurableRule(BaseRule):
         Args:
             name: Display name for this rule
             mark: Points awarded (can be negative for deduction)
-            checks: List of (check_type, params) tuples
-                Example: [("margin", {"side": "Top", "expected_cm": 3.0})]
+            checks: List of check configurations
+                Example: [{"type": "margin", "params": {"side": "Top", "expected_cm": 3.0}}]
             scoring: Scoring mode:
                 - "all_or_nothing": Full mark if all checks pass, 0 otherwise (default)
                 - "at_least": Full mark if at least min_pass checks pass
@@ -45,7 +45,13 @@ class ConfigurableRule(BaseRule):
     
     def _build_checks(self):
         """Build check instances from configuration."""
-        for check_type, params in self.check_configs:
+        for check_config in self.check_configs:
+            check_type = check_config.get("type")
+            params = check_config.get("params", {})
+            
+            if not check_type:
+                raise ValueError(f"Check configuration missing 'type' field: {check_config}")
+            
             try:
                 check_class = get_check(check_type)
                 check_instance = check_class(**params)
@@ -69,12 +75,14 @@ class ConfigurableRule(BaseRule):
                 "needs_review": whether manual review is needed
             }
         """
+        # Handle placeholder rules (no checks configured)
         if not self.check_instances:
             return {
                 "name": self.name,
                 "mark": 0,
-                "errors": ["No checks configured for this rule"],
-                "needs_review": True
+                "errors": [],
+                "needs_review": False,
+                "placeholder": True
             }
         
         errors = []

@@ -23,7 +23,6 @@ class SectionHasHeaderCheck(BaseCheck):
             section_index: Which section to check (1-based)
             should_exist: True if header should exist, False if it should not
         """
-        super().__init__(section_index=section_index, should_exist=should_exist)
         self.section_index = section_index
         self.should_exist = should_exist
     
@@ -70,7 +69,6 @@ class SectionHasFooterCheck(BaseCheck):
             section_index: Which section to check (1-based)
             should_exist: True if footer should exist, False if it should not
         """
-        super().__init__(section_index=section_index, should_exist=should_exist)
         self.section_index = section_index
         self.should_exist = should_exist
     
@@ -118,7 +116,6 @@ class HeaderContentCheck(BaseCheck):
             min_length: Minimum length of header content (default 1)
             pattern: Optional regex pattern to match (if None, just checks length)
         """
-        super().__init__(section_index=section_index, min_length=min_length, pattern=pattern)
         self.section_index = section_index
         self.min_length = min_length
         self.pattern = pattern
@@ -169,7 +166,6 @@ class FooterContentCheck(BaseCheck):
             min_length: Minimum length of footer content (default 1)
             pattern: Optional regex pattern to match
         """
-        super().__init__(section_index=section_index, min_length=min_length, pattern=pattern)
         self.section_index = section_index
         self.min_length = min_length
         self.pattern = pattern
@@ -208,13 +204,9 @@ class FooterContentCheck(BaseCheck):
 
 class PageBorderShadowCheck(BaseCheck):
     """
-    检查指定页面是否有阴影边框（自动处理section映射）
+    检查指定页面是否有阴影边框
     
-    会自动：
-    1. 找到页面所属的section
-    2. 判断是否为section第一页
-    3. 根据EnableFirstPageInSection/EnableOtherPagesInSection判断该页是否启用边框
-    4. 检查Borders.Shadow
+    注意：页面边框通常是应用在整个 section 上的
     """
     
     def __init__(self, page_num=1, should_have_shadow=True):
@@ -223,7 +215,6 @@ class PageBorderShadowCheck(BaseCheck):
             page_num: 页码（1-based）
             should_have_shadow: True检查有阴影，False检查无阴影
         """
-        super().__init__(page_num=page_num, should_have_shadow=should_have_shadow)
         self.page_num = page_num
         self.should_have_shadow = should_have_shadow
     
@@ -236,29 +227,28 @@ class PageBorderShadowCheck(BaseCheck):
             (False, error_message) otherwise
         """
         try:
-            # 1. 找到页面所属的section
+            # 获取页面对应的section
             section, is_first_page = get_section_for_page(doc, self.page_num)
             
             if section is None:
-                return False, f"Cannot find section for page {self.page_num}"
+                return False, f"❌ Cannot find section for page {self.page_num}"
             
-            # 2. 判断该页是否启用了边框
+            # 检查该页面是否启用了边框
             border_enabled = is_border_enabled_for_page(section, is_first_page)
             
             if not border_enabled:
-                # 该页未启用边框
+                # 边框未启用，则没有阴影
                 if self.should_have_shadow:
-                    return False, f"❌ Page {self.page_num} has no border enabled (cannot have shadow)"
+                    return False, f"❌ Page {self.page_num} has no border enabled"
                 else:
-                    return True, f"✅ Page {self.page_num} has no border (no shadow as expected)"
+                    return True, f"✅ Page {self.page_num} has no border (no shadow)"
             
-            # 3. 检查是否有阴影
+            # 边框已启用，检查阴影属性
             try:
                 has_shadow = section.Borders.Shadow
-            except:
-                has_shadow = False
+            except Exception as e:
+                return False, f"❌ Error accessing border shadow property: {str(e)}"
             
-            # 4. 比较期望值
             if self.should_have_shadow:
                 if has_shadow:
                     return True, f"✅ Page {self.page_num} has shadow border"
@@ -285,7 +275,6 @@ class SectionBorderShadowCheck(BaseCheck):
             section_index: Section索引（1-based）
             should_have_shadow: True检查有阴影，False检查无阴影
         """
-        super().__init__(section_index=section_index, should_have_shadow=should_have_shadow)
         self.section_index = section_index
         self.should_have_shadow = should_have_shadow
     

@@ -5,6 +5,7 @@ import traceback
 from core.document_loader import load_word_document
 from core.rule_engine import evaluate
 from core.utils.utils import validate_zid
+from core.utils.result_utils import merge_results
 import time
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -60,6 +61,10 @@ def run_batch(exam_config, writer=None):
             doc, word_app = load_word_document(word_path)
 
             result = evaluate(doc, exam_config.rules)
+            
+            # Apply merge rules if configured (only for Excel output)
+            if exam_config.merge_rules:
+                result["results"] = merge_results(result["results"], exam_config.merge_rules)
 
             doc.Close(False)
             word_app.Quit()

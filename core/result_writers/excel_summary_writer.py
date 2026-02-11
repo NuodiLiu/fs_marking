@@ -16,60 +16,52 @@ class ExcelSummaryWriter:
             )
         
         self.wb = load_workbook(self.path)
-        self.RULE_ROW_MAPPING = [
-            0,                  # MarginRule
-            (1, 2),             # CoverPageTitleRule + CoverPageTableRule → merge
-            3,                  # TableOfContentsRule
-            4,                  # StrictHeading1Rule
-            5,                  # StrictHeading2Rule
-            6,                  # CombinedStyleRule
-            7,                  # ImageRightOfTextRule
-            8,                  # FootnoteOnHabitatRule
-            9,                  # FooterRule
-            10,                 # CombinedMultilevelListRule
-            11,                 # PageBreakBeforeHeadingRule
-            12                  # ReferencesHangingIndentRule
-        ]
-    def _convert_result_to_excel_marks(self, result: dict) -> list[int]:
-        """
-        Convert 13-rule result into 12-row mark list for Excel, with merge logic applied.
-        """
-        results = result["results"]
-        marks = [None] * 12
-        needs_review = [False] * 12
-
-        for i, rule_map in enumerate(self.RULE_ROW_MAPPING):
-            if isinstance(rule_map, tuple):
-                combined_mark = sum(results[idx]["mark"] for idx in rule_map)
-                marks[i] = combined_mark
-
-                combined_review = any(results[idx].get("needs_review", False) for idx in rule_map)
-                needs_review[i] = combined_review
-            else:
-                marks[i] = results[rule_map]["mark"]
-                needs_review[i] = results[rule_map].get("needs_review", False)
-
-        return marks, needs_review
 
     def write(self, zid: str, result: dict):
         """
         Write the result for the given zid into the correct column of all sheets.
+        Rules are written in order starting from row 4.
+        
+        Args:
+            zid: Student ID
+            result: {
+                "total": int,
+                "results": [{"name": str, "mark": int, "errors": list, "needs_review": bool}, ...]
+            }
         """
         WARNING_FILL = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-        marks, needs_review_list = self._convert_result_to_excel_marks(result)
-
+        
+        # Find the column for this ZID in all sheets
         for sheet in self.wb.worksheets:
             row_2 = list(sheet.iter_rows(min_row=2, max_row=2, values_only=True))[0]
+            
             for col_idx in range(6, sheet.max_column + 1):
                 zid_value = row_2[col_idx - 1]
                 if isinstance(zid_value, str) and zid.lower() in zid_value.lower():
-                    for i, (mark, needs_review) in enumerate(zip(marks, needs_review_list)):
-                        cell = sheet.cell(row=4 + i, column=col_idx)
+                    # Write marks for each rule in order
+                    row_offset = 0
+                    for rule_result in result["results"]:
+                        cell = sheet.cell(row=4 + row_offset, column=col_idx)
+                        
+                        # Write None for placeholder rules and fill with yellow
+                        if rule_result.get("placeholder", False):
+                            cell.value = None
+                            cell.fill = WARNING_FILL
+                            row_offset += 1
+                            continue
+                        
+                        mark = rule_result.get("mark", 0)
+                        needs_review = rule_result.get("needs_review", False)
+                        
                         if needs_review:
                             cell.value = f"{mark} ⚠️" if mark is not None else "⚠️"
                             cell.fill = WARNING_FILL
                         else:
                             cell.value = mark
+                        
+                        row_offset += 1
+                    
+                    break  # Found the column, move to next sheet
 
     def save(self, output_path: Optional[str] = None):
         self.wb.save(output_path or self.path)

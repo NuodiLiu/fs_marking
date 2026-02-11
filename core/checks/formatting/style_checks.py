@@ -23,8 +23,6 @@ class StyleFontCheck(BaseCheck):
             italic: 是否斜体（True/False），None表示不检查
             color: 字体颜色检查函数名（如"is_font_color_blueish"），None表示不检查
         """
-        super().__init__(style_name=style_name, font_name=font_name, font_size=font_size,
-                         bold=bold, italic=italic, color=color)
         self.style_name = style_name
         self.font_name = font_name
         self.font_size = font_size
@@ -79,15 +77,33 @@ class StyleFontCheck(BaseCheck):
                 except Exception as e:
                     errors.append(f"cannot read italic: {e}")
             
-            # 检查颜色（如果提供了颜色检查函数）
+            # 检查颜色（如果提供了颜色检查参数）
             if self.color is not None:
-                try:
-                    from core.utils.color_utils import is_font_color_blueish
-                    if self.color == "is_font_color_blueish":
-                        if not is_font_color_blueish(font):
-                            errors.append("font color is not blue-ish")
-                except Exception as e:
-                    errors.append(f"cannot check font color: {e}")
+                from core.utils.color_utils import is_font_color_blueish, is_font_color_black
+                
+                # 统一处理为列表
+                color_checks = [self.color] if isinstance(self.color, str) else self.color
+                
+                for check_type in color_checks:
+                    try:
+                        if check_type == "not_blue":
+                            if is_font_color_blueish(font):
+                                errors.append("font color is blue (should not be)")
+                                
+                        elif check_type == "not_black":
+                            if is_font_color_black(font):
+                                errors.append("font color is black (should not be)")
+                                
+                        elif check_type == "must_be_blue" or check_type == "is_font_color_blueish":
+                            if not is_font_color_blueish(font):
+                                errors.append("font color is not blue-ish")
+                                
+                        elif check_type == "must_be_black":
+                            if not is_font_color_black(font):
+                                errors.append("font color is not black")
+                                
+                    except Exception as e:
+                        errors.append(f"cannot check color '{check_type}': {e}")
             
             if errors:
                 return (False, f"❌ Style '{self.style_name}': {', '.join(errors)}")
@@ -115,9 +131,6 @@ class StyleParagraphFormatCheck(BaseCheck):
             left_indent: 左缩进（点数），None表示不检查
             right_indent: 右缩进（点数），None表示不检查
         """
-        super().__init__(style_name=style_name, alignment=alignment, line_spacing=line_spacing,
-                         line_spacing_rule=line_spacing_rule, space_before=space_before, space_after=space_after,
-                         first_line_indent=first_line_indent, left_indent=left_indent, right_indent=right_indent)
         self.style_name = style_name
         
         # 使用utils函数转换字符串到常量
@@ -160,13 +173,6 @@ class StyleParagraphFormatCheck(BaseCheck):
                     if actual_rule != self.line_spacing_rule:
                         actual_name = get_line_spacing_rule_name(actual_rule)
                         expected_name = get_line_spacing_rule_name(self.line_spacing_rule)
-                        errors.append(f"line spacing rule is {actual_name}, expected {expected_name}")
-                except Exception as e:
-                    errors.append(f"cannot read line spacing rule: {e}")
-                            constants.wdLineSpaceExactly: "Exactly"
-                        }
-                        actual_name = rule_names.get(actual_rule, f"Unknown({actual_rule})")
-                        expected_name = rule_names.get(self.line_spacing_rule, f"Unknown({self.line_spacing_rule})")
                         errors.append(f"line spacing rule is {actual_name}, expected {expected_name}")
                 except Exception as e:
                     errors.append(f"cannot read line spacing rule: {e}")

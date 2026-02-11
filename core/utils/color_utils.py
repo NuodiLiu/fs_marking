@@ -77,12 +77,12 @@ def is_blue_hsl(r: int, g: int, b: int) -> bool:
     rn, gn, bn = r/255.0, g/255.0, b/255.0
     h, l, s = colorsys.rgb_to_hls(rn, gn, bn)
     deg = h * 360
-    return 135 <= deg <= 255 and s >= 0.15
+    return 140 <= deg <= 250 and s >= 0.15
 
 def is_blue_hsl(rn, gn, bn) -> bool:
     h, l, s = colorsys.rgb_to_hls(rn, gn, bn)
     deg = h * 360
-    return 135 <= deg <= 255 and s >= 0.15
+    return 140 <= deg <= 250 and s >= 0.15
 
 def is_blue_lab(r, g, b) -> bool:
     if not _HAS_COLORMATH:
@@ -97,7 +97,7 @@ def is_blue_ycbcr(rn, gn, bn) -> bool:
     y  = 0.299*rn + 0.587*gn + 0.114*bn
     cb = (bn - y)*0.564 + 0.5
     cr = (rn - y)*0.713 + 0.5
-    return cb > cr and cb >= 0.4
+    return cb > cr and cb >= 0.45
 
 # for para range and heading style font only, wordart and textframe should use fillcolor
 def is_font_color_blueish(font, para_format=None) -> bool:
@@ -128,3 +128,18 @@ def is_font_color_blueish(font, para_format=None) -> bool:
     print(votes, "→", count, "/", total)
 
     return count >= math.ceil(total / 2)
+
+
+def is_font_color_black(font) -> bool:
+    """
+    判断字体颜色是否为黑色（或接近黑色）。
+    RGB 三个分量都小于 30 视为黑色。
+    
+    Args:
+        font: Word Font 对象
+    
+    Returns:
+        True if black-ish, else False
+    """
+    r, g, b = get_ui_color_rgb(font)
+    return r < 30 and g < 30 and b < 30

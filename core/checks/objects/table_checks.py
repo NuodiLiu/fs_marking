@@ -17,9 +17,12 @@ class PageHasTableCheck(BaseCheck):
     def check(self, doc):
         try:
             for table in doc.Tables:
-                table_page = table.Range.Information(constants.wdActiveEndPageNumber)
-                if table_page == self.page_num:
-                    return (True, f"✅ Page {self.page_num} has table")
+                try:
+                    table_page = table.Range.Information(constants.wdActiveEndPageNumber)
+                    if table_page == self.page_num:
+                        return (True, f"✅ Page {self.page_num} has table")
+                except:
+                    continue
             
             return (False, f"❌ Page {self.page_num} has no table")
         
@@ -47,9 +50,12 @@ class TableDimensionCheck(BaseCheck):
         try:
             tables_on_page = []
             for table in doc.Tables:
-                table_page = table.Range.Information(constants.wdActiveEndPageNumber)
-                if table_page == self.page_num:
-                    tables_on_page.append(table)
+                try:
+                    table_page = table.Range.Information(constants.wdActiveEndPageNumber)
+                    if table_page == self.page_num:
+                        tables_on_page.append(table)
+                except:
+                    continue
             
             if len(tables_on_page) == 0:
                 return (False, f"❌ No table found on page {self.page_num}")
@@ -96,9 +102,12 @@ class TableCellNotEmptyCheck(BaseCheck):
         try:
             tables_on_page = []
             for table in doc.Tables:
-                table_page = table.Range.Information(constants.wdActiveEndPageNumber)
-                if table_page == self.page_num:
-                    tables_on_page.append(table)
+                try:
+                    table_page = table.Range.Information(constants.wdActiveEndPageNumber)
+                    if table_page == self.page_num:
+                        tables_on_page.append(table)
+                except:
+                    continue
             
             if len(tables_on_page) == 0:
                 return (False, f"❌ No table found on page {self.page_num}")
@@ -149,9 +158,12 @@ class TableCellContainsTextCheck(BaseCheck):
         try:
             tables_on_page = []
             for table in doc.Tables:
-                table_page = table.Range.Information(constants.wdActiveEndPageNumber)
-                if table_page == self.page_num:
-                    tables_on_page.append(table)
+                try:
+                    table_page = table.Range.Information(constants.wdActiveEndPageNumber)
+                    if table_page == self.page_num:
+                        tables_on_page.append(table)
+                except:
+                    continue
             
             if len(tables_on_page) == 0:
                 return (False, f"❌ No table found on page {self.page_num}")
@@ -186,26 +198,29 @@ class TableCellContainsTextCheck(BaseCheck):
 class TableHasStyleCheck(BaseCheck):
     """检查表格是否应用了指定的Table Design样式"""
     
-    def __init__(self, page_num=1, table_index=0, valid_styles=None, mode="whitelist"):
+    def __init__(self, page_num=1, table_index=0, styles=None, mode="whitelist"):
         """
         Args:
             page_num: 页码（1-based）
             table_index: 表格索引（0-based）
-            valid_styles: 样式名称列表
+            styles: 样式名称列表（whitelist模式下是允许的样式，blacklist模式下是禁止的样式）
             mode: "whitelist"（必须在列表中）或 "blacklist"（不能在列表中）
         """
         self.page_num = page_num
         self.table_index = table_index
-        self.valid_styles = valid_styles or []
+        self.styles = styles or []
         self.mode = mode
     
     def check(self, doc):
         try:
             tables_on_page = []
             for table in doc.Tables:
-                table_page = table.Range.Information(constants.wdActiveEndPageNumber)
-                if table_page == self.page_num:
-                    tables_on_page.append(table)
+                try:
+                    table_page = table.Range.Information(constants.wdActiveEndPageNumber)
+                    if table_page == self.page_num:
+                        tables_on_page.append(table)
+                except:
+                    continue
             
             if len(tables_on_page) == 0:
                 return (False, f"❌ No table found on page {self.page_num}")
@@ -221,16 +236,16 @@ class TableHasStyleCheck(BaseCheck):
                 style_name = "Unknown"
             
             if self.mode == "whitelist":
-                if style_name in self.valid_styles:
+                if style_name in self.styles:
                     return (True, f"✅ Table has valid style: '{style_name}'")
                 else:
-                    return (False, f"❌ Table style is '{style_name}', expected one of {self.valid_styles}")
+                    return (False, f"❌ Table style is '{style_name}', expected one of {self.styles}")
             
             elif self.mode == "blacklist":
-                if style_name not in self.valid_styles:
+                if style_name not in self.styles:
                     return (True, f"✅ Table has non-default style: '{style_name}'")
                 else:
-                    return (False, f"❌ Table has default style: '{style_name}'")
+                    return (False, f"❌ Table has blacklisted style: '{style_name}'")
             
             return (False, f"❌ Invalid mode: {self.mode}")
         
@@ -256,9 +271,12 @@ class TableCountCheck(BaseCheck):
         try:
             count = 0
             for table in doc.Tables:
-                table_page = table.Range.Information(constants.wdActiveEndPageNumber)
-                if table_page == self.page_num:
-                    count += 1
+                try:
+                    table_page = table.Range.Information(constants.wdActiveEndPageNumber)
+                    if table_page == self.page_num:
+                        count += 1
+                except:
+                    continue
             
             if self.mode == "exact":
                 if count == self.expected_count:

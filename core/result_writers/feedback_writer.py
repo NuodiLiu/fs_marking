@@ -18,6 +18,10 @@ class FeedbackWriter:
                 f.write("\n⚠️ Manual review suggested.\n")
                 
             for rule in result["results"]:
+                # Skip placeholder rules
+                if rule.get("placeholder", False):
+                    continue
+                
                 mark = rule["mark"]
                 name = rule["name"]
                 errors = rule.get("errors", [])

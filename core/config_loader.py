@@ -18,7 +18,7 @@ class ExamConfig:
     This is what Pipeline expects - a clean interface with rules and output config.
     """
     
-    def __init__(self, exam_info: Dict[str, Any], rules: List[BaseRule], output: Dict[str, Any]):
+    def __init__(self, exam_info: Dict[str, Any], rules: List[BaseRule], output: Dict[str, Any], merge_rules: List[Dict[str, Any]] = None):
         """
         Initialize exam configuration.
         
@@ -26,6 +26,7 @@ class ExamConfig:
             exam_info: Exam metadata (name, code, etc.)
             rules: List of rule instances
             output: Output configuration (paths, mappings, etc.)
+            merge_rules: Optional merge configuration for grouping rules
         """
         self.name = exam_info.get("name", "Unnamed Exam")
         self.code = exam_info.get("code", "unknown")
@@ -34,6 +35,7 @@ class ExamConfig:
         
         self.rules = rules
         self.output = output
+        self.merge_rules = merge_rules or []
     
     def __repr__(self):
         return f"ExamConfig(name='{self.name}', code='{self.code}', rules={len(self.rules)})"
@@ -85,11 +87,15 @@ class ConfigLoader:
         # Build rules from configuration
         rules = ConfigLoader._build_rules(config_dict["rules"])
         
+        # Extract merge configuration (optional)
+        merge_rules = config_dict.get("merge_rules", [])
+        
         # Create and return ExamConfig
         return ExamConfig(
             exam_info=config_dict["exam"],
             rules=rules,
-            output=config_dict["output"]
+            output=config_dict["output"],
+            merge_rules=merge_rules
         )
     
     @staticmethod
@@ -179,6 +185,7 @@ class ConfigLoader:
             mark=rule_config["mark"],
             checks=rule_config["checks"],
             scoring=rule_config.get("scoring", "all_or_nothing"),
+            min_pass=rule_config.get("min_pass"),
             needs_review_on_error=rule_config.get("needs_review_on_error", False)
         )
 
