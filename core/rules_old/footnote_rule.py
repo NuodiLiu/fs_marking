@@ -1,6 +1,6 @@
 # core/rules/footnote_rules/footnote_on_habitat_rule.py
 
-from core.rules.base_rule import BaseRule
+from core.rules_old.base_rule import BaseRule
 from core.utils.utils import fuzzy_match
 
 class FootnoteOnHabitatRule(BaseRule):

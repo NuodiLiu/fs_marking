@@ -1,4 +1,4 @@
-from core.rules.base_rule import BaseRule
+from core.rules_old.base_rule import BaseRule
 from core.utils.utils import validate_zid
 from win32com.client import constants
 

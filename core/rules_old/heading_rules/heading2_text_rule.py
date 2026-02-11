@@ -1,5 +1,5 @@
 # core/rules/strict_heading2_rule.py
-from core.rules.heading_rules.heading_text_base import StrictHeadingRuleBase
+from core.rules_old.heading_rules.heading_text_base import StrictHeadingRuleBase
 
 class StrictHeading2Rule(StrictHeadingRuleBase):
     def __init__(self, mark=1):

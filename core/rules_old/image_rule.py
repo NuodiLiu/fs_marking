@@ -1,6 +1,6 @@
 # core/rules/image_rules/image_right_of_text_rule.py
 
-from core.rules.base_rule import BaseRule
+from core.rules_old.base_rule import BaseRule
 from core.utils.utils import fuzzy_match
 from win32com.client import constants
 import difflib

@@ -29,7 +29,14 @@ def find_word_file(student_folder):
     return word_files[0]
     
 
-def run_batch(config, writer=None):
+def run_batch(exam_config, writer=None):
+    """
+    Run batch evaluation for all student submissions.
+    
+    Args:
+        exam_config: ExamConfig object with rules and output configuration
+        writer: Optional ResultWriter for outputting results
+    """
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
 
@@ -52,7 +59,7 @@ def run_batch(config, writer=None):
             word_path = find_word_file(student_path)
             doc, word_app = load_word_document(word_path)
 
-            result = evaluate(doc, config.RULES)
+            result = evaluate(doc, exam_config.rules)
 
             doc.Close(False)
             word_app.Quit()

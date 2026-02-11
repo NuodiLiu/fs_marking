@@ -1,7 +1,7 @@
 # core/rules/combined_style_rule.py
 
-from core.rules.base_rule import BaseRule
-from core.rules.style_setting_rules.style_checkpoints_list import get_all_style_checkpoints
+from core.rules_old.base_rule import BaseRule
+from core.rules_old.style_setting_rules.style_checkpoints_list import get_all_style_checkpoints
 
 class CombinedStyleRule(BaseRule):
     def __init__(self):

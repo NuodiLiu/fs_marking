@@ -2,7 +2,12 @@ import re
 import difflib
 
 def cm_to_points(cm: float) -> float:
+    """Convert centimeters to Word points."""
     return cm * 28.35  # Word: 1cm = 28.35 pt
+
+def points_to_cm(points: float) -> float:
+    """Convert Word points to centimeters."""
+    return points / 28.35
 
 def validate_zid(zid):
     # Z1234567 or z1234567 or 1234567

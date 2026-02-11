@@ -1,5 +1,5 @@
 # core/rules/strict_heading_base.py
-from core.rules.base_rule import BaseRule
+from core.rules_old.base_rule import BaseRule
 from core.utils.utils import fuzzy_match
 
 class StrictHeadingRuleBase(BaseRule):

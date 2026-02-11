@@ -1,4 +1,4 @@
-from core.rules.base_rule import BaseRule
+from core.rules_old.base_rule import BaseRule
 from win32com.client import constants
 
 class TableOfContentsRule(BaseRule):

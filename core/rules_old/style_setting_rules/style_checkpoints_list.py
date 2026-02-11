@@ -1,4 +1,4 @@
-from core.rules.style_setting_rules.style_checkpoints import StyleCheckPoint
+from core.rules_old.style_setting_rules.style_checkpoints import StyleCheckPoint
 from core.utils.color_utils import is_font_color_blueish
 from win32com.client import constants
 

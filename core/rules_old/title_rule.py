@@ -1,4 +1,4 @@
-from core.rules.base_rule import BaseRule
+from core.rules_old.base_rule import BaseRule
 from core.utils.object_utils import font_has_effects
 from core.utils.utils import fuzzy_match
 from win32com.client import constants  # type: ignore

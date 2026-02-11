@@ -1,0 +1,149 @@
+"""
+Configurable rule that composes multiple atomic check units.
+"""
+
+from core.rules.base_rule import BaseRule
+from core.checks.registry import get_check
+from typing import List, Tuple, Dict, Any
+
+
+class ConfigurableRule(BaseRule):
+    """
+    A rule composed of multiple atomic check units through configuration.
+    
+    This allows creating complex rules without writing new code, just by
+    specifying which checks to run and how to score them.
+    """
+    
+    def __init__(self, name: str, mark: int, checks: List[Tuple[str, Dict[str, Any]]], 
+                 scoring: str = "all_or_nothing", min_pass: int = None, 
+                 needs_review_on_error: bool = False):
+        """
+        Initialize a configurable rule.
+        
+        Args:
+            name: Display name for this rule
+            mark: Points awarded (can be negative for deduction)
+            checks: List of (check_type, params) tuples
+                Example: [("margin", {"side": "Top", "expected_cm": 3.0})]
+            scoring: Scoring mode:
+                - "all_or_nothing": Full mark if all checks pass, 0 otherwise (default)
+                - "at_least": Full mark if at least min_pass checks pass
+                - "partial": Proportional mark based on pass rate (kept for flexibility)
+            min_pass: Minimum number of checks that must pass (for "at_least" mode)
+            needs_review_on_error: If True, any check error triggers manual review
+        """
+        super().__init__(name=name, mark=mark)
+        self.check_configs = checks
+        self.scoring = scoring
+        self.min_pass = min_pass
+        self.needs_review_on_error = needs_review_on_error
+        self.check_instances = []
+        
+        # Build check instances from configuration
+        self._build_checks()
+    
+    def _build_checks(self):
+        """Build check instances from configuration."""
+        for check_type, params in self.check_configs:
+            try:
+                check_class = get_check(check_type)
+                check_instance = check_class(**params)
+                self.check_instances.append(check_instance)
+            except Exception as e:
+                self.logger.error(f"Failed to build check '{check_type}': {e}")
+                raise ValueError(f"Invalid check configuration: {check_type} with params {params}") from e
+    
+    def run(self, doc) -> dict:
+        """
+        Execute all configured checks and compute score.
+        
+        Args:
+            doc: Word document object
+        
+        Returns:
+            dict: {
+                "name": rule name,
+                "mark": computed mark,
+                "errors": list of error messages,
+                "needs_review": whether manual review is needed
+            }
+        """
+        if not self.check_instances:
+            return {
+                "name": self.name,
+                "mark": 0,
+                "errors": ["No checks configured for this rule"],
+                "needs_review": True
+            }
+        
+        errors = []
+        passed_count = 0
+        check_error_occurred = False
+        
+        # Run all checks
+        for i, check in enumerate(self.check_instances):
+            try:
+                success, error_msg = check.check(doc)
+                
+                if success:
+                    passed_count += 1
+                    self.logger.debug(f"Check {i+1}/{len(self.check_instances)} passed: {check}")
+                else:
+                    if error_msg:
+                        errors.append(error_msg)
+                    self.logger.debug(f"Check {i+1}/{len(self.check_instances)} failed: {check} - {error_msg}")
+                
+            except Exception as e:
+                error_msg = f"Check execution error ({check}): {str(e)}"
+                errors.append(error_msg)
+                check_error_occurred = True
+                self.logger.error(error_msg)
+        
+        # Calculate mark based on scoring mode
+        mark = self._calculate_mark(passed_count, len(self.check_instances))
+        
+        # Determine if manual review is needed
+        needs_review = check_error_occurred and self.needs_review_on_error
+        
+        return {
+            "name": self.name,
+            "mark": mark,
+            "errors": errors,
+            "needs_review": needs_review
+        }
+    
+    def _calculate_mark(self, passed: int, total: int) -> int:
+        """
+        Calculate mark based on scoring mode.
+        
+        Args:
+            passed: Number of checks that passed
+            total: Total number of checks
+        
+        Returns:
+            Computed mark
+        """
+        if self.scoring == "all_or_nothing":
+            # All checks must pass to get full mark
+            return self.mark if passed == total else 0
+        
+        elif self.scoring == "at_least":
+            # At least min_pass checks must pass to get full mark
+            # Example: 4 checks, min_pass=3 → need at least 3 to pass
+            if self.min_pass is None:
+                self.logger.warning("'at_least' scoring requires min_pass parameter, defaulting to all_or_nothing")
+                return self.mark if passed == total else 0
+            
+            return self.mark if passed >= self.min_pass else 0
+        
+        elif self.scoring == "partial":
+            # Proportional scoring (kept for flexibility, but generally not used)
+            if total == 0:
+                return 0
+            ratio = passed / total
+            return int(self.mark * ratio)
+        
+        else:
+            self.logger.warning(f"Unknown scoring mode '{self.scoring}', defaulting to all_or_nothing")
+            return self.mark if passed == total else 0
