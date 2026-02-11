@@ -10,7 +10,26 @@ from core.checks.section_checks import (
     SectionHasHeaderCheck,
     SectionHasFooterCheck,
     HeaderContentCheck,
-    FooterContentCheck
+    FooterContentCheck,
+    PageBorderShadowCheck,
+    SectionBorderShadowCheck
+)
+from core.checks.objects.shape_checks import (
+    PageHasShapeCheck,
+    ShapeContainsTextCheck,
+    ShapeCountCheck
+)
+from core.checks.objects.table_checks import (
+    PageHasTableCheck,
+    TableDimensionCheck,
+    TableCellNotEmptyCheck,
+    TableCellContainsTextCheck,
+    TableHasStyleCheck,
+    TableCountCheck
+)
+from core.checks.formatting.style_checks import (
+    StyleFontCheck,
+    StyleParagraphFormatCheck
 )
 
 
@@ -29,6 +48,27 @@ CHECK_REGISTRY = {
     # Header/footer content checks
     "header_content": HeaderContentCheck,
     "footer_content": FooterContentCheck,
+    
+    # Border checks
+    "page_border_shadow": PageBorderShadowCheck,
+    "section_border_shadow": SectionBorderShadowCheck,
+    
+    # Shape checks
+    "page_has_shape": PageHasShapeCheck,
+    "shape_contains_text": ShapeContainsTextCheck,
+    "shape_count": ShapeCountCheck,
+    
+    # Table checks
+    "page_has_table": PageHasTableCheck,
+    "table_dimension": TableDimensionCheck,
+    "table_cell_not_empty": TableCellNotEmptyCheck,
+    "table_cell_contains_text": TableCellContainsTextCheck,
+    "table_has_style": TableHasStyleCheck,
+    "table_count": TableCountCheck,
+    
+    # Style checks
+    "style_font": StyleFontCheck,
+    "style_paragraph_format": StyleParagraphFormatCheck,
 }
 
 

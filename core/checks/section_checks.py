@@ -5,6 +5,7 @@ These are granular checks for specific section properties.
 """
 
 from core.checks.base_check import BaseCheck
+from core.utils.section_utils import get_section_for_page, is_border_enabled_for_page
 from typing import Tuple
 from win32com.client import constants
 
@@ -203,3 +204,120 @@ class FooterContentCheck(BaseCheck):
             
         except Exception as e:
             return False, f"Error checking footer content in section {self.section_index}: {str(e)}"
+
+
+class PageBorderShadowCheck(BaseCheck):
+    """
+    检查指定页面是否有阴影边框（自动处理section映射）
+    
+    会自动：
+    1. 找到页面所属的section
+    2. 判断是否为section第一页
+    3. 根据EnableFirstPageInSection/EnableOtherPagesInSection判断该页是否启用边框
+    4. 检查Borders.Shadow
+    """
+    
+    def __init__(self, page_num=1, should_have_shadow=True):
+        """
+        Args:
+            page_num: 页码（1-based）
+            should_have_shadow: True检查有阴影，False检查无阴影
+        """
+        super().__init__(page_num=page_num, should_have_shadow=should_have_shadow)
+        self.page_num = page_num
+        self.should_have_shadow = should_have_shadow
+    
+    def check(self, doc) -> Tuple[bool, str]:
+        """
+        检查页面是否有阴影边框
+        
+        Returns:
+            (True, "") if border shadow status matches expectation
+            (False, error_message) otherwise
+        """
+        try:
+            # 1. 找到页面所属的section
+            section, is_first_page = get_section_for_page(doc, self.page_num)
+            
+            if section is None:
+                return False, f"Cannot find section for page {self.page_num}"
+            
+            # 2. 判断该页是否启用了边框
+            border_enabled = is_border_enabled_for_page(section, is_first_page)
+            
+            if not border_enabled:
+                # 该页未启用边框
+                if self.should_have_shadow:
+                    return False, f"❌ Page {self.page_num} has no border enabled (cannot have shadow)"
+                else:
+                    return True, f"✅ Page {self.page_num} has no border (no shadow as expected)"
+            
+            # 3. 检查是否有阴影
+            try:
+                has_shadow = section.Borders.Shadow
+            except:
+                has_shadow = False
+            
+            # 4. 比较期望值
+            if self.should_have_shadow:
+                if has_shadow:
+                    return True, f"✅ Page {self.page_num} has shadow border"
+                else:
+                    return False, f"❌ Page {self.page_num} has no shadow border"
+            else:
+                if not has_shadow:
+                    return True, f"✅ Page {self.page_num} has no shadow border"
+                else:
+                    return False, f"❌ Page {self.page_num} has shadow border (should not have)"
+            
+        except Exception as e:
+            return False, f"❌ Error checking page border: {str(e)}"
+
+
+class SectionBorderShadowCheck(BaseCheck):
+    """
+    检查指定section是否有阴影边框（低层检查，直接操作section）
+    """
+    
+    def __init__(self, section_index=1, should_have_shadow=True):
+        """
+        Args:
+            section_index: Section索引（1-based）
+            should_have_shadow: True检查有阴影，False检查无阴影
+        """
+        super().__init__(section_index=section_index, should_have_shadow=should_have_shadow)
+        self.section_index = section_index
+        self.should_have_shadow = should_have_shadow
+    
+    def check(self, doc) -> Tuple[bool, str]:
+        """
+        检查section是否有阴影边框
+        
+        Returns:
+            (True, "") if border shadow status matches expectation
+            (False, error_message) otherwise
+        """
+        try:
+            if doc.Sections.Count < self.section_index:
+                return False, f"Document has only {doc.Sections.Count} section(s)"
+            
+            section = doc.Sections(self.section_index)
+            
+            try:
+                has_shadow = section.Borders.Shadow
+            except:
+                has_shadow = False
+            
+            if self.should_have_shadow:
+                if has_shadow:
+                    return True, f"✅ Section {self.section_index} has shadow border"
+                else:
+                    return False, f"❌ Section {self.section_index} has no shadow border"
+            else:
+                if not has_shadow:
+                    return True, f"✅ Section {self.section_index} has no shadow border"
+                else:
+                    return False, f"❌ Section {self.section_index} has shadow border (should not have)"
+            
+        except Exception as e:
+            return False, f"❌ Error checking section border: {str(e)}"
