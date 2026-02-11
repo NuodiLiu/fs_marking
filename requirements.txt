@@ -1,0 +1,8 @@
+# Word automation (COM interface)
+pywin32>=306
+
+# Excel file manipulation
+openpyxl>=3.1.0
+
+# Color space conversions (for color_utils.py)
+colormath>=3.0.0
