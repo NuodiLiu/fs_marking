@@ -366,6 +366,40 @@ class ShapeWrapFormatCheck(BaseCheck):
         self.fuzzy = fuzzy
         self.threshold = threshold
     
+    def _find_target_shape(self, doc):
+        """Find a shape matching text_contains criteria. Returns (shape, error_msg)."""
+        shapes_on_page = []
+        
+        for shape in doc.Shapes:
+            try:
+                if self.page_num is not None:
+                    shape_page = shape.Anchor.Information(constants.wdActiveEndPageNumber)
+                    if shape_page != self.page_num:
+                        continue
+                
+                shapes_on_page.append(shape)
+                
+                if self.text_contains:
+                    if hasattr(shape, 'TextFrame') and shape.TextFrame.HasText:
+                        actual_text = shape.TextFrame.TextRange.Text.strip()
+                        if self.fuzzy:
+                            if fuzzy_match(self.text_contains, actual_text, self.threshold):
+                                return shape, None
+                        else:
+                            if self.text_contains in actual_text:
+                                return shape, None
+                else:
+                    return shape, None
+            except:
+                continue
+        
+        page_desc = f"on page {self.page_num}" if self.page_num else "in document"
+        if not shapes_on_page:
+            return None, f"❌ No shapes found {page_desc}"
+        if self.text_contains:
+            return None, f"❌ No shape found containing '{self.text_contains[:30]}...'"
+        return None, f"❌ No shape found"
+    
     def check(self, doc):
         try:
             # Wrap format constants
@@ -387,45 +421,9 @@ class ShapeWrapFormatCheck(BaseCheck):
             if expected_wrap is None:
                 return (False, f"❌ Unknown wrap type: {self.wrap_type}")
             
-            # 找到目标shape
-            target_shape = None
-            shapes_on_page = []
-            
-            for shape in doc.Shapes:
-                try:
-                    if self.page_num is not None:
-                        shape_page = shape.Anchor.Information(constants.wdActiveEndPageNumber)
-                        if shape_page != self.page_num:
-                            continue
-                    
-                    shapes_on_page.append(shape)
-                    
-                    if self.text_contains:
-                        if hasattr(shape, 'TextFrame') and shape.TextFrame.HasText:
-                            actual_text = shape.TextFrame.TextRange.Text.strip()
-                            if self.fuzzy:
-                                if fuzzy_match(self.text_contains, actual_text, self.threshold):
-                                    target_shape = shape
-                                    break
-                            else:
-                                if self.text_contains in actual_text:
-                                    target_shape = shape
-                                    break
-                    else:
-                        target_shape = shape
-                        break
-                except:
-                    continue
-            
-            if not shapes_on_page:
-                page_desc = f"on page {self.page_num}" if self.page_num else "in document"
-                return (False, f"❌ No shapes found {page_desc}")
-            
-            if not target_shape:
-                if self.text_contains:
-                    return (False, f"❌ No shape found containing '{self.text_contains[:30]}...'")
-                else:
-                    return (False, f"❌ No shape found")
+            target_shape, error = self._find_target_shape(doc)
+            if target_shape is None:
+                return (False, error)
             
             # 检查环绕格式
             try:
@@ -444,3 +442,146 @@ class ShapeWrapFormatCheck(BaseCheck):
         
         except Exception as e:
             return (False, f"❌ Error checking shape wrap format: {str(e)}")
+
+
+class TextBoxFormatCheck(BaseCheck):
+    """
+    检查textbox/shape内文本的格式属性。
+    
+    通过文本内容定位shape，然后检查其中文字的格式。
+    支持检查：italic, font_size, alignment (justified), shading。
+    使用 min_pass 模式，如 4 项中满足 3 项即通过。
+    """
+    
+    def __init__(self, text_contains="", fuzzy=True, threshold=0.7, page_num=None,
+                 italic=None, font_size=None, alignment=None, has_shading=None,
+                 min_pass=None):
+        """
+        Args:
+            text_contains: 用于定位shape的文本内容
+            fuzzy: 文本匹配是否模糊
+            threshold: 模糊匹配阈值
+            page_num: 可选，页码（1-based）
+            italic: 期望是否斜体 (True/False/None=不检查)
+            font_size: 期望字号（磅，如10）
+            alignment: 期望对齐方式 ("left", "center", "right", "justified")
+            has_shading: 期望是否有底纹 (True/False/None=不检查)
+            min_pass: 最少需通过的格式项数，None=全部通过
+        """
+        self.text_contains = text_contains
+        self.fuzzy = fuzzy
+        self.threshold = threshold
+        self.page_num = page_num
+        self.italic = italic
+        self.font_size = font_size
+        self.alignment = alignment
+        self.has_shading = has_shading
+        self.min_pass = min_pass
+    
+    def check(self, doc):
+        try:
+            # Find target shape
+            target_shape = None
+            for shape in doc.Shapes:
+                try:
+                    if self.page_num is not None:
+                        shape_page = shape.Anchor.Information(constants.wdActiveEndPageNumber)
+                        if shape_page != self.page_num:
+                            continue
+                    
+                    if hasattr(shape, 'TextFrame') and shape.TextFrame.HasText:
+                        actual_text = shape.TextFrame.TextRange.Text.strip()
+                        if self.fuzzy:
+                            if fuzzy_match(self.text_contains, actual_text, self.threshold):
+                                target_shape = shape
+                                break
+                        else:
+                            if self.text_contains in actual_text:
+                                target_shape = shape
+                                break
+                except:
+                    continue
+            
+            if target_shape is None:
+                return (False, f"❌ No shape found containing '{self.text_contains[:40]}...'")
+            
+            text_range = target_shape.TextFrame.TextRange
+            
+            # Run format checks
+            results = []  # list of (name, passed, detail)
+            
+            # Italic check
+            if self.italic is not None:
+                actual_italic = bool(text_range.Font.Italic)
+                passed = actual_italic == self.italic
+                results.append(("Italic", passed, 
+                    f"italic={'yes' if actual_italic else 'no'}"))
+            
+            # Font size check
+            if self.font_size is not None:
+                actual_size = text_range.Font.Size
+                passed = abs(actual_size - self.font_size) < 0.5
+                results.append(("FontSize", passed, 
+                    f"size={actual_size}pt (expected {self.font_size}pt)"))
+            
+            # Alignment check
+            if self.alignment is not None:
+                alignment_map = {
+                    "left": 0,       # wdAlignParagraphLeft
+                    "center": 1,     # wdAlignParagraphCenter
+                    "right": 2,      # wdAlignParagraphRight
+                    "justified": 3,  # wdAlignParagraphJustify
+                }
+                expected_align = alignment_map.get(self.alignment.lower(), -1)
+                # Check first paragraph's alignment
+                actual_align = text_range.ParagraphFormat.Alignment
+                passed = actual_align == expected_align
+                align_names = {0: "left", 1: "center", 2: "right", 3: "justified"}
+                results.append(("Alignment", passed,
+                    f"align={align_names.get(actual_align, actual_align)} (expected {self.alignment})"))
+            
+            # Shading check
+            if self.has_shading is not None:
+                try:
+                    # Check paragraph-level shading first, then shape fill
+                    shading = text_range.Shading
+                    # wdColorAutomatic = -16777216
+                    para_has_shading = (shading.BackgroundPatternColor != -16777216 
+                                        and shading.BackgroundPatternColor != 0)
+                    
+                    # Also check shape fill
+                    shape_has_fill = False
+                    try:
+                        fill = target_shape.Fill
+                        # ForeColor.RGB != 16777215 (white) means it has a fill color
+                        shape_has_fill = fill.Visible and fill.ForeColor.RGB != 16777215
+                    except:
+                        pass
+                    
+                    actual_has_shading = para_has_shading or shape_has_fill
+                    passed = actual_has_shading == self.has_shading
+                    results.append(("Shading", passed,
+                        f"shading={'yes' if actual_has_shading else 'no'}"))
+                except Exception:
+                    results.append(("Shading", False, "shading=unable to detect"))
+            
+            # Evaluate results
+            total = len(results)
+            pass_count = sum(1 for _, p, _ in results if p)
+            failed_details = [f"{name}: {detail}" for name, p, detail in results if not p]
+            passed_details = [f"{name}: {detail}" for name, p, detail in results if p]
+            
+            required = self.min_pass if self.min_pass is not None else total
+            
+            if pass_count >= required:
+                return (True, 
+                    f"✅ Textbox format: {pass_count}/{total} passed (need {required}). "
+                    f"Passed: {', '.join(passed_details)}"
+                    + (f". Failed: {', '.join(failed_details)}" if failed_details else ""))
+            else:
+                return (False,
+                    f"❌ Textbox format: {pass_count}/{total} passed (need {required}). "
+                    f"Failed: {', '.join(failed_details)}")
+        
+        except Exception as e:
+            return (False, f"❌ Error checking textbox format: {str(e)}")

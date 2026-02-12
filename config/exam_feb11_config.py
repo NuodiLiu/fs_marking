@@ -143,10 +143,15 @@ COVER_PAGE_CONFIG = {
         },
         {
             "name": "Footer Before Second Paragraph",
-            "mark": 0,
-            "checks": [],
+            "mark": 1,
+            "checks": [
+                {"type": "footer_has_field", "params": {
+                    "section_index": 1,
+                    "field_type": 29
+                }}
+            ],
             "scoring": "all_or_nothing",
-            "placeholder": True
+            "always_review": True
         },
         {
             "name": "Second Paragraph Indent",
@@ -233,10 +238,27 @@ COVER_PAGE_CONFIG = {
         },
         {
             "name": "Textbox",
-            "mark": 0,
-            "checks": [],
-            "scoring": "all_or_nothing",
-            "placeholder": True
+            "mark": 2,
+            "checks": [
+                {"type": "shape_wrap_format", "params": {
+                    "wrap_type": "top_bottom",
+                    "text_contains": "Experience the future of entertainment where technology brings it all to life",
+                    "fuzzy": True,
+                    "threshold": 0.7
+                }},
+                {"type": "textbox_format", "params": {
+                    "text_contains": "Experience the future of entertainment where technology brings it all to life",
+                    "fuzzy": True,
+                    "threshold": 0.7,
+                    "italic": True,
+                    "font_size": 10,
+                    "alignment": "justified",
+                    "has_shading": True,
+                    "min_pass": 3
+                }}
+            ],
+            "scoring": "partial",
+            "always_review": True
         },
         {
             "name": "Footnote for Effect",

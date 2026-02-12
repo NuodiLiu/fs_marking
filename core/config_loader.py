@@ -193,7 +193,9 @@ class ConfigLoader:
             checks=rule_config["checks"],
             scoring=rule_config.get("scoring", "all_or_nothing"),
             min_pass=rule_config.get("min_pass"),
-            needs_review_on_error=rule_config.get("needs_review_on_error", False)
+            needs_review_on_error=rule_config.get("needs_review_on_error", False),
+            always_review=rule_config.get("always_review", False),
+            review_on_partial=rule_config.get("review_on_partial", False)
         )
 
 

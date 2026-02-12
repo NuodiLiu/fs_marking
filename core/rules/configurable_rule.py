@@ -25,7 +25,9 @@ class ConfigurableRule(BaseRule):
     
     def __init__(self, name: str, mark: int, checks: List[Dict[str, Any]], 
                  scoring: str = "all_or_nothing", min_pass: int = None, 
-                 needs_review_on_error: bool = False):
+                 needs_review_on_error: bool = False,
+                 always_review: bool = False,
+                 review_on_partial: bool = False):
         """
         Initialize a configurable rule.
         
@@ -40,12 +42,16 @@ class ConfigurableRule(BaseRule):
                 - "partial": Proportional mark based on pass rate (kept for flexibility)
             min_pass: Minimum number of checks that must pass (for "at_least" mode)
             needs_review_on_error: If True, any check error triggers manual review
+            always_review: If True, always mark for manual review regardless of result
+            review_on_partial: If True, mark for review when not full marks (skip review on full marks)
         """
         super().__init__(name=name, mark=mark)
         self.check_configs = checks
         self.scoring = scoring
         self.min_pass = min_pass
         self.needs_review_on_error = needs_review_on_error
+        self.always_review = always_review
+        self.review_on_partial = review_on_partial
         self.check_instances = []
         
         # Build check instances from configuration
@@ -120,7 +126,10 @@ class ConfigurableRule(BaseRule):
         mark = self._calculate_mark(passed_count, len(self.check_instances))
         
         # Determine if manual review is needed
-        needs_review = check_error_occurred and self.needs_review_on_error
+        is_full_mark = (mark == self.mark)
+        needs_review = (self.always_review
+                        or (self.review_on_partial and not is_full_mark)
+                        or (check_error_occurred and self.needs_review_on_error))
         
         return {
             "name": self.name,

@@ -1,7 +1,22 @@
 # core/logger.py
 import logging
 import os
+import time
 from logging.handlers import RotatingFileHandler
+
+
+class SafeRotatingFileHandler(RotatingFileHandler):
+    """RotatingFileHandler that retries on PermissionError (e.g. OneDrive locks)."""
+
+    def doRollover(self):
+        for attempt in range(3):
+            try:
+                super().doRollover()
+                return
+            except PermissionError:
+                time.sleep(0.3)
+        # All retries failed — skip rotation, keep writing to current file
+        pass
 
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
 LOG_FILE = os.path.join(LOG_DIR, "system.log")
@@ -40,7 +55,7 @@ def setup_logger(name: str, disable_file_logging: bool = False) -> logging.Logge
         # Rotating file handler (disabled in multiprocessing to avoid file locks)
         # Check both parameter and global flag
         if not disable_file_logging and not _FILE_LOGGING_DISABLED:
-            fh = RotatingFileHandler(LOG_FILE, maxBytes=2 * 1024 * 1024, backupCount=3, encoding="utf-8")
+            fh = SafeRotatingFileHandler(LOG_FILE, maxBytes=2 * 1024 * 1024, backupCount=3, encoding="utf-8")
             fh.setLevel(logging.DEBUG)
             fh.setFormatter(formatter)
             logger.addHandler(fh)

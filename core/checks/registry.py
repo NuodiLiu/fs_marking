@@ -20,7 +20,8 @@ from core.checks.objects.shape_checks import (
     ShapeCountCheck,
     ShapeTypeCheck,
     ShapePositionCheck,
-    ShapeWrapFormatCheck
+    ShapeWrapFormatCheck,
+    TextBoxFormatCheck
 )
 from core.checks.objects.table_checks import (
     PageHasTableCheck,
@@ -56,6 +57,9 @@ from core.checks.content.text_checks import (
 from core.checks.content.footnote_checks import (
     FootnoteCheck
 )
+from core.checks.sections.footer_field_checks import (
+    FooterHasFieldCheck
+)
 
 
 # Central registry of all available check types
@@ -85,6 +89,7 @@ CHECK_REGISTRY = {
     "shape_type": ShapeTypeCheck,
     "shape_position": ShapePositionCheck,
     "shape_wrap_format": ShapeWrapFormatCheck,
+    "textbox_format": TextBoxFormatCheck,
     
     # Table checks
     "page_has_table": PageHasTableCheck,
@@ -119,6 +124,9 @@ CHECK_REGISTRY = {
     
     # Footnote checks
     "footnote": FootnoteCheck,
+    
+    # Footer field checks
+    "footer_has_field": FooterHasFieldCheck,
 }
 
 

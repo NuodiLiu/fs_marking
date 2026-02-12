@@ -25,10 +25,13 @@ class FeedbackWriter:
                 mark = rule["mark"]
                 name = rule["name"]
                 errors = rule.get("errors", [])
+                needs_review = rule.get("needs_review", False)
                 if mark == 0:
                     f.write(f"❌ {name}: 0 mark\n")
                     for err in errors:
                         f.write(f"    - {err}\n")
+                elif needs_review:
+                    f.write(f"⚠️ {name}: {mark} mark (needs manual review)\n")
                 else:
                     f.write(f"✔️ {name}: {mark} mark\n")
             
